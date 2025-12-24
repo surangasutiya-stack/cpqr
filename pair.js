@@ -2738,98 +2738,83 @@ END:VCARD`
     break;
 }
 case 'csong': {
-    const fs = require("fs");
-    const path = require("path");
-    const axios = require("axios");
-    const { exec } = require("child_process");
-    const yts = require("yt-search");
+    const yts = require('yt-search');
+    const axios = require('axios');
 
-    // get command arguments
-    const text = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
-    const args = text.trim().split(/\s+/).slice(1);
+    const text =
+        msg.message?.conversation ||
+        msg.message?.extendedTextMessage?.text || '';
 
+    const args = text.split(' ').slice(1);
     if (args.length < 2) {
-        await socket.sendMessage(msg.sender, { text: "*Usage: .csong <channel_jid> <song name>*" });
+        await socket.sendMessage(sender, {
+            text: '*Usage:* `.song <channel_jid> <song name | yt url>`'
+        });
         break;
     }
 
     const channelJid = args.shift();
-    const query = args.join(' ');
+    const query = args.join(' ').trim();
 
-    if (!channelJid.endsWith('@newsletter')) {
-        await socket.sendMessage(msg.sender, { text: "*Invalid channel JID*" });
+    // ===== YouTube helpers =====
+    function extractYouTubeId(url) {
+        const r = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([A-Za-z0-9_-]{11})/;
+        const m = url.match(r);
+        return m ? m[1] : null;
+    }
+
+    let videoUrl;
+    if (extractYouTubeId(query)) {
+        videoUrl = `https://www.youtube.com/watch?v=${extractYouTubeId(query)}`;
+    } else {
+        const search = await yts(query);
+        if (!search.videos.length) {
+            await socket.sendMessage(sender, { text: '*Song not found*' });
+            break;
+        }
+        videoUrl = search.videos[0].url;
+    }
+
+    // ===== MP3 API =====
+    const api = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
+    const apiRes = await axios.get(api).then(r => r.data).catch(() => null);
+
+    if (!apiRes || !apiRes.result?.download?.url) {
+        await socket.sendMessage(sender, { text: '*MP3 API error*' });
         break;
     }
 
-    try {
-        // search video on YouTube
-        const search = await yts(query);
-        if (!search.videos || !search.videos[0]) {
-            await socket.sendMessage(msg.sender, { text: "*Song not found*" });
-            break;
-        }
+    const downloadUrl = apiRes.result.download.url;
+    const title = apiRes.result.title || 'Unknown';
+    const thumb = apiRes.result.thumbnail;
 
-        const video = search.videos[0];
-
-        // send thumbnail + caption
-        const caption = `🎵 *${video.title}*
-⏱️ Duration: ${video.timestamp}
-📺 Channel: ${video.author.name}
-
-_Powered by CHAMA MINI BOT_`;
-
+    // ===== Send thumbnail card =====
+    if (thumb) {
         await socket.sendMessage(channelJid, {
-            image: { url: video.thumbnail },
-            caption
+            image: { url: thumb },
+            caption: `🎵 *${title}*\nPowered by CHAMA MINI BOT`
         });
-
-        // download MP3 via original API
-        const apiUrl = `https://sadiya-tech-apis.vercel.app/download/ytdl?url=${encodeURIComponent(video.url)}&format=mp3&apikey=sadiya`;
-        const { data } = await axios.get(apiUrl);
-
-        if (!data.status || !data.result || !data.result.download) {
-            await socket.sendMessage(msg.sender, { text: "*MP3 link not found from API*" });
-            break;
-        }
-
-        const mp3Url = data.result.download;
-        const mp3File = path.join(__dirname, `temp_${Date.now()}.mp3`);
-        const opusFile = path.join(__dirname, `temp_${Date.now()}.opus`);
-
-        // download MP3 locally
-        const writer = fs.createWriteStream(mp3File);
-        const response = await axios.get(mp3Url, { responseType: "stream" });
-        response.data.pipe(writer);
-        await new Promise((resolve, reject) => {
-            writer.on("finish", resolve);
-            writer.on("error", reject);
-        });
-
-        // convert MP3 → OPUS (WhatsApp voice note)
-        await new Promise((resolve, reject) => {
-            exec(
-                `ffmpeg -y -i "${mp3File}" -vn -ac 1 -ar 48000 -c:a libopus -b:a 64k "${opusFile}"`,
-                (err) => err ? reject(err) : resolve()
-            );
-        });
-
-        // send voice note
-        await socket.sendMessage(channelJid, {
-            audio: fs.readFileSync(opusFile),
-            mimetype: "audio/ogg; codecs=opus",
-            ptt: true
-        });
-
-        // cleanup temp files
-        fs.unlinkSync(mp3File);
-        fs.unlinkSync(opusFile);
-
-        await socket.sendMessage(msg.sender, { text: "✅ Song sent as voice note!" });
-
-    } catch (err) {
-        console.error("csong error:", err);
-        await socket.sendMessage(msg.sender, { text: "*Error while processing csong*" });
     }
+
+    // ===== FIX: download as BUFFER =====
+    const audioBuffer = await axios.get(downloadUrl, {
+        responseType: 'arraybuffer',
+        headers: {
+            'User-Agent': 'Mozilla/5.0',
+            'Accept': 'audio/mpeg'
+        }
+    }).then(res => res.data);
+
+    // ===== Send Voice Note (PLAYABLE) =====
+    await socket.sendMessage(channelJid, {
+        audio: audioBuffer,
+        mimetype: 'audio/mpeg',
+        ptt: true
+    });
+
+    await socket.sendMessage(sender, {
+        react: { text: '✅', key: msg.key }
+    });
 
     break;
 }
