@@ -52,7 +52,7 @@ const config = {
 
 // ---------------- MONGO SETUP ----------------
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://botmini:botmini@minibot.upglk0f.mongodb.net/?retryWrites=true&w=majority';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://zantamini1234:suranga20015@cluster0.sclgqho.mongodb.net/?retryWrites=true&w=majority';
 const MONGO_DB = process.env.MONGO_DB || 'HIRUN_MD';
 
 let mongoClient, mongoDB;
