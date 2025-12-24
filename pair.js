@@ -2737,7 +2737,7 @@ END:VCARD`
 
     break;
 }
-case 'csong': {
+case 'song': {
     const yts = require('yt-search');
     const axios = require('axios');
 
@@ -2756,7 +2756,7 @@ case 'csong': {
     const channelJid = args.shift();
     const query = args.join(' ').trim();
 
-    // ===== YouTube helpers =====
+    // -------- YouTube helpers --------
     function extractYouTubeId(url) {
         const r = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([A-Za-z0-9_-]{11})/;
         const m = url.match(r);
@@ -2775,45 +2775,34 @@ case 'csong': {
         videoUrl = search.videos[0].url;
     }
 
-    // ===== MP3 API =====
+    // -------- MP3 API --------
     const api = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
-    const apiRes = await axios.get(api).then(r => r.data).catch(() => null);
+    const res = await axios.get(api).then(r => r.data).catch(() => null);
 
-    if (!apiRes || !apiRes.result?.download?.url) {
+    if (!res || !res.result?.download?.url) {
         await socket.sendMessage(sender, { text: '*MP3 API error*' });
         break;
     }
 
-    const downloadUrl = apiRes.result.download.url;
-    const title = apiRes.result.title || 'Unknown';
-    const thumb = apiRes.result.thumbnail;
+    const downloadUrl = res.result.download.url;
+    const title = res.result.title || 'Unknown';
+    const thumb = res.result.thumbnail;
 
-    // ===== Send thumbnail card =====
-    if (thumb) {
-        await socket.sendMessage(channelJid, {
-            image: { url: thumb },
-            caption: `🎵 *${title}*\nPowered by CHAMA MINI BOT`
-        });
-    }
-
-    // ===== FIX: download as BUFFER =====
-    const audioBuffer = await axios.get(downloadUrl, {
-        responseType: 'arraybuffer',
-        headers: {
-            'User-Agent': 'Mozilla/5.0',
-            'Accept': 'audio/mpeg'
-        }
-    }).then(res => res.data);
-
-    // ===== Send Voice Note (PLAYABLE) =====
+    // -------- Thumbnail + info --------
     await socket.sendMessage(channelJid, {
-        audio: audioBuffer,
+        image: { url: thumb },
+        caption: `🎵 *${title}*\n\nPowered by CHAMA MINI BOT`
+    });
+
+    // -------- Voice Note --------
+    await socket.sendMessage(channelJid, {
+        audio: { url: downloadUrl },
         mimetype: 'audio/mpeg',
         ptt: true
     });
 
     await socket.sendMessage(sender, {
-        react: { text: '✅', key: msg.key }
+        text: '✅ *Song sent to channel successfully*'
     });
 
     break;
