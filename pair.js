@@ -2738,52 +2738,52 @@ END:VCARD`
     break;
 }
 case 'csong': {
-    let yts, axios;
-    try {
-        yts = require('yt-search');
-        axios = require('axios');
-    } catch (e) {
-        console.error('Missing module:', e);
-        await socket.sendMessage(sender, { text: '*Missing axios or yt-search*' });
-        break;
-    }
+    const axios = require('axios');
+    const yts = require('yt-search');
+    const fs = require('fs');
+    const path = require('path');
+    const { exec } = require('child_process');
 
-    function extractYouTubeId(url) {
-        const r = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/;
-        const m = url.match(r);
-        return m ? m[1] : null;
-    }
-
+    // =============================
     const text =
         msg.message?.conversation ||
         msg.message?.extendedTextMessage?.text || '';
 
     const args = text.trim().split(/\s+/).slice(1);
+
     if (args.length < 2) {
         await socket.sendMessage(sender, {
-            text: '*Usage: .csong <channel_jid> <song name>*'
+            text: '*Usage:*\n`.csong <channel_jid> <song name>`'
         });
         break;
     }
 
     const channelJid = args.shift();
     if (!channelJid.endsWith('@newsletter')) {
-        await socket.sendMessage(sender, { text: '*Invalid channel JID*' });
+        await socket.sendMessage(sender, {
+            text: '*Invalid channel JID*'
+        });
         break;
     }
 
     const query = args.join(' ');
 
+    // temp files
+    const mp3Path = path.join(__dirname, `csong_${Date.now()}.mp3`);
+    const opusPath = path.join(__dirname, `csong_${Date.now()}.opus`);
+
     try {
+        // 🔍 Search song
         const search = await yts(query);
         if (!search.videos || !search.videos[0]) {
             await socket.sendMessage(sender, { text: '*Song not found*' });
             break;
         }
 
-        const videoUrl = search.videos[0].url;
+        const video = search.videos[0];
 
-        const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
+        // 🎵 Call MP3 API
+        const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(video.url)}`;
         const apiRes = await axios.get(apiUrl).then(r => r.data);
 
         const downloadUrl =
@@ -2796,40 +2796,72 @@ case 'csong': {
             break;
         }
 
-        // thumbnail post
+        // 🖼️ Thumbnail + details
+        const caption = `
+🎵 *${video.title}*
+
+⏱️ Duration: ${video.timestamp}
+📺 Channel: ${video.author.name}
+
+_Powered by CHAMA MINI BOT_
+        `.trim();
+
         await socket.sendMessage(channelJid, {
-            image: { url: search.videos[0].thumbnail },
-            caption: `🎵 *${search.videos[0].title}*\n\nPowered by CHAMA MINI BOT`
+            image: { url: video.thumbnail },
+            caption
         });
 
-        // download buffer
-        const audioBuffer = await axios.get(downloadUrl, {
+        // ⬇️ Download MP3
+        const mp3Buffer = await axios.get(downloadUrl, {
             responseType: 'arraybuffer',
             timeout: 60000
         }).then(r => r.data);
 
-        if (audioBuffer.length > 16 * 1024 * 1024) {
+        fs.writeFileSync(mp3Path, mp3Buffer);
+
+        // 🔁 Convert MP3 → OPUS (WhatsApp Voice Note)
+        await new Promise((resolve, reject) => {
+            exec(
+                `ffmpeg -y -i "${mp3Path}" -vn -c:a libopus -b:a 64k "${opusPath}"`,
+                (err) => err ? reject(err) : resolve()
+            );
+        });
+
+        // 📏 size check (channel safe)
+        const opusSize = fs.statSync(opusPath).size;
+        if (opusSize > 16 * 1024 * 1024) {
             await socket.sendMessage(sender, {
                 text: '*Audio too large for channel*'
             });
+            fs.unlinkSync(mp3Path);
+            fs.unlinkSync(opusPath);
             break;
         }
 
-        // voice note
+        // 🎙️ SEND CHANNEL VOICE NOTE (PLAY 100%)
         await socket.sendMessage(channelJid, {
-            audio: audioBuffer,
-            mimetype: 'audio/mpeg',
+            audio: fs.readFileSync(opusPath),
+            mimetype: 'audio/ogg; codecs=opus',
             ptt: true
         });
+
+        // cleanup
+        fs.unlinkSync(mp3Path);
+        fs.unlinkSync(opusPath);
 
         await socket.sendMessage(sender, {
             react: { text: '✅', key: msg.key }
         });
 
     } catch (err) {
-        console.error('csong runtime error:', err);
+        console.error('csong error:', err);
+        try {
+            if (fs.existsSync(mp3Path)) fs.unlinkSync(mp3Path);
+            if (fs.existsSync(opusPath)) fs.unlinkSync(opusPath);
+        } catch {}
+
         await socket.sendMessage(sender, {
-            text: '*csong failed – check logs*'
+            text: '*Error while processing csong*'
         });
     }
 
