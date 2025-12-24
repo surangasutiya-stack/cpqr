@@ -2775,7 +2775,7 @@ case 'system': {
   }
   break;
 }
-Case 'menu': {
+case 'menu': {
   try { await socket.sendMessage(sender, { react: { text: "📄", key: msg.key } }); } catch(e){}
 
   try {
