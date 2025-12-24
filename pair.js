@@ -2737,7 +2737,54 @@ END:VCARD`
 
     break;
 }
-.song ඇයිද ආවෙ
+case 'csong': {
+    let yts, axios;
+    try {
+        yts = require('yt-search');
+        axios = require('axios');
+    } catch (e) {
+        console.error('Missing module:', e);
+        await socket.sendMessage(sender, { text: '*Missing axios or yt-search*' });
+        break;
+    }
+
+    function extractYouTubeId(url) {
+        const r = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([a-zA-Z0-9_-]{11})/;
+        const m = url.match(r);
+        return m ? m[1] : null;
+    }
+
+    const text =
+        msg.message?.conversation ||
+        msg.message?.extendedTextMessage?.text || '';
+
+    const args = text.trim().split(/\s+/).slice(1);
+    if (args.length < 2) {
+        await socket.sendMessage(sender, {
+            text: '*Usage: .csong <channel_jid> <song name>*'
+        });
+        break;
+    }
+
+    const channelJid = args.shift();
+    if (!channelJid.endsWith('@newsletter')) {
+        await socket.sendMessage(sender, { text: '*Invalid channel JID*' });
+        break;
+    }
+
+    const query = args.join(' ');
+
+    try {
+        const search = await yts(query);
+        if (!search.videos || !search.videos[0]) {
+            await socket.sendMessage(sender, { text: '*Song not found*' });
+            break;
+        }
+
+        const videoUrl = search.videos[0].url;
+
+        const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
+        const apiRes = await axios.get(apiUrl).then(r => r.data);
 
         const downloadUrl =
             apiRes.downloadUrl ||
@@ -2745,52 +2792,44 @@ END:VCARD`
             apiRes.result?.url;
 
         if (!downloadUrl) {
-            await socket.sendMessage(sender, { text: "*Download link not found*" });
+            await socket.sendMessage(sender, { text: '*No audio link*' });
             break;
         }
 
-        const title = apiRes.title || apiRes.result?.title || "Unknown Title";
-        const thumb = apiRes.thumbnail || apiRes.result?.thumbnail;
-        const duration = apiRes.duration || apiRes.result?.duration || "N/A";
-        const quality = apiRes.quality || "128kbps";
+        // thumbnail post
+        await socket.sendMessage(channelJid, {
+            image: { url: search.videos[0].thumbnail },
+            caption: `🎵 *${search.videos[0].title}*\n\nPowered by CHAMA MINI BOT`
+        });
 
-        // 📝 caption
-        const caption = `
-🎧 *${title}*
+        // download buffer
+        const audioBuffer = await axios.get(downloadUrl, {
+            responseType: 'arraybuffer',
+            timeout: 60000
+        }).then(r => r.data);
 
-⏱️ Duration: ${duration}
-🔊 Quality: ${quality}
-🔗 Source: YouTube
-
-*Powered by CHAMA MINI BOT*
-        `.trim();
-
-        // 🖼️ send thumbnail + details
-        if (thumb) {
-            await socket.sendMessage(channelJid, {
-                image: { url: thumb },
-                caption
+        if (audioBuffer.length > 16 * 1024 * 1024) {
+            await socket.sendMessage(sender, {
+                text: '*Audio too large for channel*'
             });
-        } else {
-            await socket.sendMessage(channelJid, { text: caption });
+            break;
         }
 
-        // 🎙️ send VOICE NOTE
+        // voice note
         await socket.sendMessage(channelJid, {
-            audio: { url: downloadUrl },
-            mimetype: "audio/mpeg",
+            audio: audioBuffer,
+            mimetype: 'audio/mpeg',
             ptt: true
         });
 
-        // react success
         await socket.sendMessage(sender, {
-            react: { text: "✅", key: msg.key }
+            react: { text: '✅', key: msg.key }
         });
 
     } catch (err) {
-        console.error("csong error:", err);
+        console.error('csong runtime error:', err);
         await socket.sendMessage(sender, {
-            text: "*Error while sending song to channel*"
+            text: '*csong failed – check logs*'
         });
     }
 
