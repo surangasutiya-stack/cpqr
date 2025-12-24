@@ -1527,7 +1527,7 @@ case 'gpt': {
         const messages = {
             noCity: "❗ *Please provide a city name!* \n📋 *Usage*: .weather [city name]",
             weather: (data) => `
-*☘️ 𝐇iru ✘ 𝐌d 𝐖eather 𝐑eport ☘️*
+*☘️ 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌d 𝐖eather 𝐑eport ☘️*
 
 *◈  ${data.name}, ${data.sys.country}  ◈*
 
@@ -1602,7 +1602,7 @@ case 'aiimg2': {
         // 🔹 Load bot name dynamically
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+        let botName = cfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
         // 🔹 Fake contact with dynamic bot name
         const shonux = {
@@ -1620,7 +1620,7 @@ VERSION:3.0
 N:${botName};;;;
 FN:${botName}
 ORG:Meta Platforms
-TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002
+TEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 000
 END:VCARD`
                 }
             }
