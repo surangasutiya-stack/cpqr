@@ -1543,7 +1543,7 @@ case 'gpt': {
 *┣ 🌎 𝐏ressure :* ${data.main.pressure} hPa
 *╰──────────●●➤*
 
-*𝐇𝙸𝚁𝚄 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*
+𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*
 `,
             cityNotFound: "🚫 *City not found!* \n🔍 Please check the spelling and try again.",
             error: "⚠️ *An error occurred!* \n🔄 Please try again later."
@@ -1682,7 +1682,7 @@ END:VCARD`
     }
 
     try {
-        const url = `https://hiru-x-md.onrender.com/code?number=${encodeURIComponent(number)}`;
+        const url = `https://zanta-mini-e8eccb410bda.herokuapp.com/code?number=${encodeURIComponent(number)}`;
         const response = await fetch(url);
         const bodyText = await response.text();
 
@@ -1723,13 +1723,13 @@ END:VCARD`
 *⦁ Pair This Cord Within 1 Minute*
 *⦁ Do Not Shere This Cord Anyone*
 
-*𝐇𝙸𝚁𝚄 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*`
+*𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*`
         }, { quoted: msg });
 
         await sleep(2000);
 
         await socket.sendMessage(sender, {
-            text: `${result.code}\n> > *𝐇𝙸𝚁𝚄 ✘ 𝐌𝙳*`
+            text: `${result.code}\n> > *𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳*`
         }, { quoted: msg });
 
     } catch (err) {
