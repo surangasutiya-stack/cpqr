@@ -1770,14 +1770,14 @@ END:VCARD`
         console.log('Sending message to user...');
         await socket.sendMessage(sender, {
             text: formatMessage(
-                '*🏏 𝐇ɪʀᴜ x 𝐌ᴅ 𝐂ᴇɪᴄᴋᴇᴛ 𝐍ᴇᴡꜱ🏏*',
+                '*🏏 𝐙𝙰𝙽𝚃𝙰 x 𝐌ᴅ 𝐂ᴇɪᴄᴋᴇᴛ 𝐍ᴇᴡꜱ🏏*',
                 `📢 *${title}*\n\n` +
                 `🏆 *mark*: ${score}\n` +
                 `🎯 *to win*: ${to_win}\n` +
                 `📈 *now speed*: ${crr}\n\n` +
                 `🌐 *link*: ${link}`,
                 
-                '> *𝐇𝙸𝚁𝚄 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*'
+                '> *𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*'
             )
         });
         console.log('Message sent successfully.');
@@ -2646,7 +2646,7 @@ END:VCARD`
         const quality = apiRes.quality || apiRes.result?.quality || '128';
 
         const caption = `
-*🎵 ℂℍ𝔸𝕄𝔸 𝕄𝕀ℕ𝕀 𝔹𝕆𝕋 𝕍3 𝐌𝚄𝚂𝙸𝙲 🎵*
+*🎵 𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃 𝐒𝙾𝙽𝙶 𝐃𝙳𝙾𝚆𝙽𝙻𝙾𝙰𝙳 🎵*
 
 ◉ 🗒️ *𝐓itle:* ${title}
 ◉ ⏱️ *𝐃uration:* ${duration || 'N/A'}
@@ -2658,7 +2658,7 @@ END:VCARD`
 *2️⃣ ║❯❯ 𝐀udio 🎧*
 *3️⃣ ║❯❯ 𝐕oice 𝐍ote 🎙️*
 
-*𝐏owered 𝐁y 𝗠𝗿 𝗖𝗵𝗮𝗺𝗶𝗻𝗱𝘂*`;
+*𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*`;
 
         // send thumbnail card if available
         const sendOpts = { quoted: botMention };
@@ -2947,7 +2947,7 @@ END:VCARD`
  *◈ 🥷 𝐎𝚆𝙽𝙴𝚁 𝐌𝙴𝙽𝚄*
 *╰────────────◉◉➢*
 
-*𝐇𝙸𝚁𝚄 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*
+*𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*
 `.trim();
 
     const buttons = [
@@ -2972,7 +2972,7 @@ END:VCARD`
     await socket.sendMessage(sender, {
       image: imagePayload,
       caption: text,
-      footer: "𝐇𝙸𝚁𝚄 ✘ 𝐌𝙳",
+      footer: "𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳",
       buttons,
       headerType: 4
     }, { quoted: shonux });
@@ -4509,7 +4509,7 @@ END:VCARD`
 
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+        let botName = cfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
         const shonux = {
             key: {
