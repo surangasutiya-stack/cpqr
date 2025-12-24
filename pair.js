@@ -2890,7 +2890,7 @@ END:VCARD`
 }
 
 // ==================== DOWNLOAD MENU ====================
-Case 'download': {
+case 'download': {
   try { await socket.sendMessage(sender, { react: { text: "📥", key: msg.key } }); } catch(e){}
 
   try {
@@ -2968,7 +2968,7 @@ END:VCARD`
 }
 
 // ==================== CREATIVE MENU ====================
-Case 'creative': {
+case 'creative': {
   try { await socket.sendMessage(sender, { react: { text: "🎨", key: msg.key } }); } catch(e){}
 
   try {
@@ -3042,7 +3042,7 @@ END:VCARD`
 }
  
 // ==================== TOOLS MENU ====================
-Case 'tools': {
+case 'tools': {
   try { await socket.sendMessage(sender, { react: { text: "🔧", key: msg.key } }); } catch(e){}
 
   try {
@@ -3244,7 +3244,7 @@ case 'resetconfig': {
   break;
 }
 
-Case 'owner': {
+case 'owner': {
   try { await socket.sendMessage(sender, { react: { text: "🥷", key: msg.key } }); } catch(e){}
 
   try {
