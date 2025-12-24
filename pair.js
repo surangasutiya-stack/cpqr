@@ -2737,67 +2737,7 @@ END:VCARD`
 
     break;
 }
-case 'csong': {
-    const yts = require('yt-search');
-    const axios = require('axios');
-
-    // ================= utils =================
-    function extractYouTubeId(url) {
-        const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
-        const match = url.match(regex);
-        return match ? match[1] : null;
-    }
-
-    function convertYouTubeLink(input) {
-        const id = extractYouTubeId(input);
-        return id ? `https://www.youtube.com/watch?v=${id}` : input;
-    }
-    // =========================================
-
-    // get text
-    const text =
-        msg.message?.conversation ||
-        msg.message?.extendedTextMessage?.text ||
-        msg.message?.imageMessage?.caption ||
-        msg.message?.videoMessage?.caption || '';
-
-    const args = text.trim().split(/\s+/).slice(1);
-
-    if (args.length < 2) {
-        await socket.sendMessage(sender, {
-            text: "*Usage:*\n`.csong <channel_jid> <song name>`"
-        });
-        break;
-    }
-
-    const channelJid = args.shift();
-    const query = args.join(' ');
-
-    try {
-        // 🔍 search song
-        let videoUrl;
-        const maybeLink = convertYouTubeLink(query);
-
-        if (extractYouTubeId(query)) {
-            videoUrl = maybeLink;
-        } else {
-            const search = await yts(query);
-            const first = search.videos[0];
-            if (!first) {
-                await socket.sendMessage(sender, { text: "*No song found*" });
-                break;
-            }
-            videoUrl = first.url;
-        }
-
-        // 🎵 call MP3 API
-        const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
-        const apiRes = await axios.get(apiUrl).then(r => r.data).catch(() => null);
-
-        if (!apiRes) {
-            await socket.sendMessage(sender, { text: "*MP3 API Error*" });
-            break;
-        }
+.song ඇයිද ආවෙ
 
         const downloadUrl =
             apiRes.downloadUrl ||
