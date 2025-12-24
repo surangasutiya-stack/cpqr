@@ -2744,7 +2744,7 @@ case 'csong': {
     const { exec } = require("child_process");
     const yts = require("yt-search");
 
-    // get arguments
+    // get command arguments
     const text = msg.message?.conversation || msg.message?.extendedTextMessage?.text || '';
     const args = text.trim().split(/\s+/).slice(1);
 
@@ -2756,14 +2756,13 @@ case 'csong': {
     const channelJid = args.shift();
     const query = args.join(' ');
 
-    // validate channel
     if (!channelJid.endsWith('@newsletter')) {
         await socket.sendMessage(msg.sender, { text: "*Invalid channel JID*" });
         break;
     }
 
     try {
-        // search video
+        // search video on YouTube
         const search = await yts(query);
         if (!search.videos || !search.videos[0]) {
             await socket.sendMessage(msg.sender, { text: "*Song not found*" });
@@ -2772,7 +2771,7 @@ case 'csong': {
 
         const video = search.videos[0];
 
-        // thumbnail + caption
+        // send thumbnail + caption
         const caption = `🎵 *${video.title}*
 ⏱️ Duration: ${video.timestamp}
 📺 Channel: ${video.author.name}
@@ -2787,6 +2786,7 @@ _Powered by CHAMA MINI BOT_`;
         // download MP3 via original API
         const apiUrl = `https://sadiya-tech-apis.vercel.app/download/ytdl?url=${encodeURIComponent(video.url)}&format=mp3&apikey=sadiya`;
         const { data } = await axios.get(apiUrl);
+
         if (!data.status || !data.result || !data.result.download) {
             await socket.sendMessage(msg.sender, { text: "*MP3 link not found from API*" });
             break;
@@ -2796,7 +2796,7 @@ _Powered by CHAMA MINI BOT_`;
         const mp3File = path.join(__dirname, `temp_${Date.now()}.mp3`);
         const opusFile = path.join(__dirname, `temp_${Date.now()}.opus`);
 
-        // download MP3
+        // download MP3 locally
         const writer = fs.createWriteStream(mp3File);
         const response = await axios.get(mp3Url, { responseType: "stream" });
         response.data.pipe(writer);
@@ -2809,10 +2809,7 @@ _Powered by CHAMA MINI BOT_`;
         await new Promise((resolve, reject) => {
             exec(
                 `ffmpeg -y -i "${mp3File}" -vn -ac 1 -ar 48000 -c:a libopus -b:a 64k "${opusFile}"`,
-                (err, stdout, stderr) => {
-                    if (err) return reject(stderr);
-                    resolve();
-                }
+                (err) => err ? reject(err) : resolve()
             );
         });
 
@@ -2823,7 +2820,7 @@ _Powered by CHAMA MINI BOT_`;
             ptt: true
         });
 
-        // cleanup
+        // cleanup temp files
         fs.unlinkSync(mp3File);
         fs.unlinkSync(opusFile);
 
