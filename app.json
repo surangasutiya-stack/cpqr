@@ -1,23 +1,24 @@
-
 {
-    "name": "session name",
-    "description": "Web Session Generator",
-    "logo": "image url",
-    "repository": "https://github.com/username/sesssion name",
-    "keywords": ["Malvin-Tech"],
-    "success_url": "/", 
-    "buildpacks": [{ "url": "https://github.com/heroku/heroku-buildpack-nodejs#latest" } ],
-    "env": {      
-      "PORT": {
-        "description": "Port for web app.4000,5000,3000... any!",
-        "value": "5000",
-        "required": false 
-      },
-      "MESSAGE": {
-        "description": "Just Leave This Blank",
-        "value": "",
-        "required": false 
-      }
-    }   
-
+  "name": "Session Generator",
+  "description": "Web Session Generator",
+  "repository": "https://github.com/username/session-name",
+  "keywords": ["Malvin-Tech"],
+  "success_url": "/",
+  "env": {
+    "PORT": {
+      "description": "Port for web app",
+      "value": "5000",
+      "required": false
+    },
+    "MESSAGE": {
+      "description": "Just leave blank",
+      "value": "",
+      "required": false
+    }
+  },
+  "buildpacks": [
+    {
+      "url": "heroku/nodejs"
+    }
+  ]
 }
