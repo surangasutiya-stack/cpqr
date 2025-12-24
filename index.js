@@ -29,7 +29,7 @@ app.get("/pair", (req, res) => {
   res.sendFile(path.join(__path, "pair.html"));
 });
 
-app.get("/", (req, res) => {
+app.get("/pair", (req, res) => {
   res.sendFile(path.join(__path, "main.html"));
 });
 
