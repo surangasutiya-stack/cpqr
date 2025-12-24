@@ -1,18 +1,22 @@
 {
-  "name": "𝙲𝙷𝙰𝙼𝙰 𝙼𝙳 𝙼𝙸𝙽𝙸 𝙱𝙾𝚃",
+  "name": "chama-md-mini-bot",
   "version": "1.0.0",
-  "description": "𝙲𝙷𝙰𝙼𝙰 𝙼𝙳 𝙼𝙸𝙽𝙸 𝙱𝙾𝚃 WhatsApp Bot with Multi-Number Support",
+  "description": "CHAMA MD MINI BOT WhatsApp Bot with Multi-Number Support",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "start": "node index.js"
+  },
+  "engines": {
+    "node": "24.x"
   },
   "dependencies": {
     "@fuxxy-star/baileys": "latest",
     "express": "^4.18.2",
     "fs-extra": "^11.2.0",
     "pino": "^8.17.0",
+
     "jimp": "^0.16.1",
+
     "@octokit/rest": "^20.0.2",
     "denethdev-ytmp3": "1.0.3",
     "cheerio": "1.1.0",
@@ -25,19 +29,11 @@
     "moment-timezone": "^0.6.0",
     "mongodb": "^5.7.0"
   },
-  "overrides": {
-    "jimp": "^0.22.12",
-    "sharp": "0.34.1"
-  },
-  "engines": {
-    "node": ">=18.x"
-  },
   "keywords": [
     "whatsapp",
     "bot",
     "multi-device",
-    "baileys",
-    "sula-md"
+    "baileys"
   ],
   "author": "chama",
   "license": "MIT"
