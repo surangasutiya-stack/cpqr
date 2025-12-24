@@ -2737,7 +2737,7 @@ END:VCARD`
 
     break;
 }
-case 'song': {
+case 'csong': {
     const yts = require('yt-search');
     const axios = require('axios');
 
