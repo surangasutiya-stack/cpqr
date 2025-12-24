@@ -5249,6 +5249,88 @@ case 'jid': {
     break;
 }
 
+module.exports = (conn, m, args, command, isOwner, reply) => {
+
+    switch (command) {
+
+        // ======================
+        // FOLLOW CHANNEL
+        // ======================
+        case 'fc': {
+            if (!isOwner) return reply('❌ Owner only command.');
+
+            if (!args.length)
+                return reply('❌ Usage:\n.fc <jid1> <jid2>');
+
+            conn.sendMessage(m.chat, {
+                react: { text: '📢', key: m.key }
+            });
+
+            let ok = [], fail = [];
+
+            for (let jid of args) {
+                try {
+                    await conn.newsletterFollow(jid);
+                    ok.push(jid);
+
+                    await conn.sendMessage(m.chat, {
+                        text:
+`✅ *Channel Followed*
+📢 ${jid}`
+                    }, { quoted: m });
+
+                } catch {
+                    fail.push(jid);
+                }
+            }
+
+            let msg = `📊 *Follow Summary*\n\n`;
+            if (ok.length) msg += `✅ Followed:\n${ok.join('\n')}\n\n`;
+            if (fail.length) msg += `❌ Failed:\n${fail.join('\n')}`;
+
+            reply(msg);
+        }
+        break;
+
+        // ======================
+        // UNFOLLOW CHANNEL
+        // ======================
+        case 'unfc': {
+            if (!isOwner) return reply('❌ Owner only command.');
+
+            if (!args.length)
+                return reply('❌ Usage:\n.unfc <jid1> <jid2>');
+
+            for (let jid of args) {
+                try {
+                    await conn.newsletterUnfollow(jid);
+                    reply(`🚫 Unfollowed:\n${jid}`);
+                } catch {
+                    reply(`❌ Failed:\n${jid}`);
+                }
+            }
+        }
+        break;
+
+        // ======================
+        // FOLLOW HELP
+        // ======================
+        case 'fchelp': {
+            reply(
+`📢 *Channel Commands*
+
+.fc <jid1> <jid2>
+.unfc <jid1> <jid2>
+.fchelp
+
+Owner only`
+            );
+        }
+        break;
+
+    }
+};
+
 // use inside your switch(command) { ... } block
 
 case 'block': {
