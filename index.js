@@ -29,13 +29,13 @@ app.get("/pair", (req, res) => {
   res.sendFile(path.join(__path, "pair.html"));
 });
 
-app.get("/pair", (req, res) => {
+app.get("/", (req, res) => {
   res.sendFile(path.join(__path, "main.html"));
 });
 
 // Fallback (avoid Application error)
 app.use((req, res) => {
-  res.status(404).send("Page not found");
+  res.status(404).send("Page not found🫂🫂🫂🫂");
 });
 
 // Start server
