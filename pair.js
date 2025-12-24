@@ -5249,88 +5249,60 @@ case 'jid': {
     break;
 }
 
-module.exports = (conn, m, args, command, isOwner, reply) => {
+const fs = require('fs');
+const path = require('path');
+const User = require('../models/User'); // path adjust කරන්න
 
-    switch (command) {
-
-        // ======================
-        // FOLLOW CHANNEL
-        // ======================
-        case 'fc': {
-            if (!isOwner) return reply('❌ Owner only command.');
-
-            if (!args.length)
-                return reply('❌ Usage:\n.fc <jid1> <jid2>');
-
-            conn.sendMessage(m.chat, {
-                react: { text: '📢', key: m.key }
-            });
-
-            let ok = [], fail = [];
-
-            for (let jid of args) {
-                try {
-                    await conn.newsletterFollow(jid);
-                    ok.push(jid);
-
-                    await conn.sendMessage(m.chat, {
-                        text:
-`✅ *Channel Followed*
-📢 ${jid}`
-                    }, { quoted: m });
-
-                } catch {
-                    fail.push(jid);
-                }
-            }
-
-            let msg = `📊 *Follow Summary*\n\n`;
-            if (ok.length) msg += `✅ Followed:\n${ok.join('\n')}\n\n`;
-            if (fail.length) msg += `❌ Failed:\n${fail.join('\n')}`;
-
-            reply(msg);
+case 'deletesession': {
+    try {
+        // 🔒 Owner only
+        if (!isOwner) {
+            return reply('❌ Owner only command.');
         }
-        break;
 
-        // ======================
-        // UNFOLLOW CHANNEL
-        // ======================
-        case 'unfc': {
-            if (!isOwner) return reply('❌ Owner only command.');
-
-            if (!args.length)
-                return reply('❌ Usage:\n.unfc <jid1> <jid2>');
-
-            for (let jid of args) {
-                try {
-                    await conn.newsletterUnfollow(jid);
-                    reply(`🚫 Unfollowed:\n${jid}`);
-                } catch {
-                    reply(`❌ Failed:\n${jid}`);
-                }
-            }
-        }
-        break;
-
-        // ======================
-        // FOLLOW HELP
-        // ======================
-        case 'fchelp': {
-            reply(
-`📢 *Channel Commands*
-
-.fc <jid1> <jid2>
-.unfc <jid1> <jid2>
-.fchelp
-
-Owner only`
+        if (!args[0]) {
+            return reply(
+                `❌ User number එකක් දෙන්න\n\nඋදා:\n.deletesession 94771234567`
             );
         }
-        break;
 
+        const number = args[0].replace(/\D/g, '');
+        const jid = number + '@s.whatsapp.net';
+
+        // ==========================
+        // 1️⃣ MongoDB remove
+        // ==========================
+        const dbResult = await User.findOneAndDelete({ number });
+
+        // ==========================
+        // 2️⃣ Session file remove
+        // ==========================
+        const sessionPath = path.join(
+            __dirname,
+            '../sessions',
+            jid
+        );
+
+        if (fs.existsSync(sessionPath)) {
+            fs.rmSync(sessionPath, { recursive: true, force: true });
+        }
+
+        // ==========================
+        // 3️⃣ Confirmation
+        // ==========================
+        let msg = `🗑️ *Session Deleted Successfully*\n\n`;
+        msg += `👤 User: ${number}\n`;
+        msg += `📂 Session: ${fs.existsSync(sessionPath) ? '❌ Failed' : '✅ Removed'}\n`;
+        msg += `🗄️ MongoDB: ${dbResult ? '✅ Removed' : '⚠️ Not Found'}`;
+
+        reply(msg);
+
+    } catch (err) {
+        console.error(err);
+        reply('❌ Error while deleting session.');
     }
-};
-
+}
+break;
 // use inside your switch(command) { ... } block
 
 case 'block': {
