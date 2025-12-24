@@ -40,7 +40,7 @@ const config = {
   RCD_IMAGE_PATH: 'https://img.sanishtech.com/u/061fa1d7c36033b6fba20882ec7452df.png',
   NEWSLETTER_JID: '120363418953677198@newsletter',
   OTP_EXPIRY: 300000,
-  OWNER_NUMBER: process.env.OWNER_NUMBER || '94768319673',
+  OWNER_NUMBER: process.env.OWNER_NUMBER || '94783314361',
   CHANNEL_LINK: 'https://whatsapp.com/channel/0029VbBn2kFCHDydvHH74H0v',
   BOT_NAME: '© 𝐇𝙸𝚁𝚄 ✘ 𝐌𝙳',
   BOT_VERSION: '1.0.0V',
