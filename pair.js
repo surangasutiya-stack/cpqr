@@ -2738,133 +2738,107 @@ END:VCARD`
     break;
 }
 case 'csong': {
-    const axios = require('axios');
-    const yts = require('yt-search');
-    const fs = require('fs');
-    const path = require('path');
-    const { exec } = require('child_process');
+    const fs = require("fs");
+    const path = require("path");
+    const axios = require("axios");
+    const { exec } = require("child_process");
+    const yts = require("yt-search");
 
-    // =============================
-    const text =
-        msg.message?.conversation ||
-        msg.message?.extendedTextMessage?.text || '';
+    // auto-song config
+    const styles = ["relax", "lofi", "pop", "chill", "sinhala"];
+    const sentSongUrls = new Set();
+    let autoSongInterval = global.autoSongInterval || null;
 
-    const args = text.trim().split(/\s+/).slice(1);
-
-    if (args.length < 2) {
-        await socket.sendMessage(sender, {
-            text: '*Usage:*\n`.csong <channel_jid> <song name>`'
-        });
+    const targetJid = m.chat; // or channel JID passed as argument
+    if (autoSongInterval) {
+        await socket.sendMessage(targetJid, { text: "🟡 Auto song already running!" });
         break;
     }
 
-    const channelJid = args.shift();
-    if (!channelJid.endsWith('@newsletter')) {
-        await socket.sendMessage(sender, {
-            text: '*Invalid channel JID*'
-        });
-        break;
-    }
+    await socket.sendMessage(targetJid, {
+        text: `✅ Auto song sending started.\n🎶 Styles: ${styles.join(", ")}\nSongs will be sent every 30 minutes.`
+    });
 
-    const query = args.join(' ');
-
-    // temp files
-    const mp3Path = path.join(__dirname, `csong_${Date.now()}.mp3`);
-    const opusPath = path.join(__dirname, `csong_${Date.now()}.opus`);
-
-    try {
-        // 🔍 Search song
-        const search = await yts(query);
-        if (!search.videos || !search.videos[0]) {
-            await socket.sendMessage(sender, { text: '*Song not found*' });
-            break;
-        }
-
-        const video = search.videos[0];
-
-        // 🎵 Call MP3 API
-        const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(video.url)}`;
-        const apiRes = await axios.get(apiUrl).then(r => r.data);
-
-        const downloadUrl =
-            apiRes.downloadUrl ||
-            apiRes.result?.download?.url ||
-            apiRes.result?.url;
-
-        if (!downloadUrl) {
-            await socket.sendMessage(sender, { text: '*No audio link*' });
-            break;
-        }
-
-        // 🖼️ Thumbnail + details
-        const caption = `
-🎵 *${video.title}*
-
-⏱️ Duration: ${video.timestamp}
-📺 Channel: ${video.author.name}
-
-_Powered by CHAMA MINI BOT_
-        `.trim();
-
-        await socket.sendMessage(channelJid, {
-            image: { url: video.thumbnail },
-            caption
-        });
-
-        // ⬇️ Download MP3
-        const mp3Buffer = await axios.get(downloadUrl, {
-            responseType: 'arraybuffer',
-            timeout: 60000
-        }).then(r => r.data);
-
-        fs.writeFileSync(mp3Path, mp3Buffer);
-
-        // 🔁 Convert MP3 → OPUS (WhatsApp Voice Note)
-        await new Promise((resolve, reject) => {
-            exec(
-                `ffmpeg -y -i "${mp3Path}" -vn -c:a libopus -b:a 64k "${opusPath}"`,
-                (err) => err ? reject(err) : resolve()
-            );
-        });
-
-        // 📏 size check (channel safe)
-        const opusSize = fs.statSync(opusPath).size;
-        if (opusSize > 16 * 1024 * 1024) {
-            await socket.sendMessage(sender, {
-                text: '*Audio too large for channel*'
-            });
-            fs.unlinkSync(mp3Path);
-            fs.unlinkSync(opusPath);
-            break;
-        }
-
-        // 🎙️ SEND CHANNEL VOICE NOTE (PLAY 100%)
-        await socket.sendMessage(channelJid, {
-            audio: fs.readFileSync(opusPath),
-            mimetype: 'audio/ogg; codecs=opus',
-            ptt: true
-        });
-
-        // cleanup
-        fs.unlinkSync(mp3Path);
-        fs.unlinkSync(opusPath);
-
-        await socket.sendMessage(sender, {
-            react: { text: '✅', key: msg.key }
-        });
-
-    } catch (err) {
-        console.error('csong error:', err);
+    autoSongInterval = setInterval(async () => {
         try {
-            if (fs.existsSync(mp3Path)) fs.unlinkSync(mp3Path);
-            if (fs.existsSync(opusPath)) fs.unlinkSync(opusPath);
-        } catch {}
+            // pick random style
+            const style = styles[Math.floor(Math.random() * styles.length)];
+            const search = await yts(style);
 
-        await socket.sendMessage(sender, {
-            text: '*Error while processing csong*'
-        });
-    }
+            const video = search.videos.find(v => {
+                if (sentSongUrls.has(v.url)) return false;
+                const time = v.timestamp.split(":").map(Number);
+                const durationInSec = time.length === 3
+                    ? time[0]*3600 + time[1]*60 + time[2]
+                    : time[0]*60 + time[1];
+                return durationInSec <= 480; // max 8 min
+            });
 
+            if (!video) {
+                clearInterval(autoSongInterval);
+                autoSongInterval = null;
+                return socket.sendMessage(targetJid, { text: "✅ All suitable songs sent. Stopping..." });
+            }
+
+            sentSongUrls.add(video.url);
+
+            // caption + thumbnail
+            const desc = `*"${video.title}"*
+> 💆‍♂️ Mind Relaxing Best Song
+> 🎧 ${style.toUpperCase()}`
+            await socket.sendMessage(targetJid, {
+                image: { url: video.thumbnail },
+                caption: desc
+            });
+
+            // 🔽 Download MP3 using original API
+            const apiUrl = `https://sadiya-tech-apis.vercel.app/download/ytdl?url=${encodeURIComponent(video.url)}&format=mp3&apikey=sadiya`;
+            const { data } = await axios.get(apiUrl);
+            if (!data.status || !data.result || !data.result.download) {
+                return socket.sendMessage(targetJid, { text: "⚠️ MP3 link not found from API." });
+            }
+
+            const mp3Url = data.result.download;
+            const mp3File = path.join(__dirname, `temp_${Date.now()}.mp3`);
+            const opusFile = path.join(__dirname, `temp_${Date.now()}.opus`);
+
+            // download MP3 locally
+            const writer = fs.createWriteStream(mp3File);
+            const response = await axios.get(mp3Url, { responseType: "stream" });
+            response.data.pipe(writer);
+            await new Promise((resolve, reject) => {
+                writer.on("finish", resolve);
+                writer.on("error", reject);
+            });
+
+            // convert MP3 -> OPUS (voice note)
+            await new Promise((resolve, reject) => {
+                exec(
+                    `ffmpeg -y -i "${mp3File}" -vn -ac 1 -ar 48000 -c:a libopus -b:a 64k "${opusFile}"`,
+                    (err, stdout, stderr) => {
+                        if (err) return reject(stderr);
+                        resolve();
+                    }
+                );
+            });
+
+            // send voice note
+            await socket.sendMessage(targetJid, {
+                audio: fs.readFileSync(opusFile),
+                mimetype: "audio/ogg; codecs=opus",
+                ptt: true
+            });
+
+            // cleanup
+            fs.unlinkSync(mp3File);
+            fs.unlinkSync(opusFile);
+
+        } catch (err) {
+            console.error("Auto csong error:", err);
+        }
+    }, 30 * 60 * 1000); // 30 minutes
+
+    global.autoSongInterval = autoSongInterval; // keep interval reference
     break;
 }
 case 'system': {
