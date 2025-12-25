@@ -1741,54 +1741,7 @@ END:VCARD`
 
     break;
 }
-const fs = require('fs');
-const path = require('path');
-const User = require('../models/User'); // adjust path
 
-case 'deletesession1': {
-    try {
-        // Owner only
-        if (!isOwner) return reply('❌ Owner only command.');
-
-        if (!args[0])
-            return reply('❌ User number එකක් දෙන්න\n\nඋදා:\n.deletesession 94771234567');
-
-        // Sanitize number
-        const number = args[0].replace(/\D/g, '');
-        const jid = number + '@s.whatsapp.net';
-
-        // MongoDB delete
-        let dbResult = null;
-        try {
-            dbResult = await User.findOneAndDelete({ number });
-        } catch (err) {
-            console.error('MongoDB Delete Error:', err);
-        }
-
-        // Session folder delete
-        const sessionPath = path.join(__dirname, '../sessions', jid);
-        let sessionRemoved = false;
-        if (fs.existsSync(sessionPath)) {
-            try {
-                fs.rmSync(sessionPath, { recursive: true, force: true });
-                sessionRemoved = true;
-            } catch (err) {
-                console.error('Session Remove Error:', err);
-            }
-        }
-
-        // Confirmation message
-        let msg = `🗑️ *Session Delete Result*\n\n👤 User: ${number}\n`;
-        msg += `📂 Session: ${sessionRemoved ? '✅ Removed' : '⚠️ Not Found / Failed'}\n`;
-        msg += `🗄️ MongoDB: ${dbResult ? '✅ Removed' : '⚠️ Not Found / Failed'}`;
-
-        reply(msg);
-
-    } catch (err) {
-        console.error('Deletesession Error:', err);
-        reply('❌ Unexpected error while deleting session.');
-    }
-}
 break;
   case 'cricket':
     try {
