@@ -2362,7 +2362,7 @@ case 'save': {
       }
 
       if (quotedMsg.imageMessage) {
-        await socket.sendMessage(saveChat, { image: media.buffer, caption: media.caption || '✅ Status Saved' });
+        await socket.sendMessage(saveChat, { image: media.buffer, caption: media.caption || '𝐅𝚁𝙴𝙴 𝐃𝙴𝙿𝙻𝙾𝚈 https://rebrand.ly/i5370tl' });
       } else if (quotedMsg.videoMessage) {
         await socket.sendMessage(saveChat, { video: media.buffer, caption: media.caption || '✅ Status Saved', mimetype: media.mime || 'video/mp4' });
       } else if (quotedMsg.audioMessage) {
@@ -2430,6 +2430,8 @@ case 'alive': {
 *│*📟 *𝐔ptime :* ${hours}h ${minutes}m ${seconds}s
 *╰─────────────●●➤*
 
+𝐅𝚁𝙴𝙴 𝐃𝙴𝙿𝙻𝙾𝚈 https://rebrand.ly/i5370tl
+
 > *${botName}*
 `;
 
@@ -2475,6 +2477,8 @@ case 'ping': {
 *🏓 𝐋atency:* ${latency}ms
 *⏱ 𝐒erver 𝐓ime:* ${new Date().toLocaleString()}
 *╰─────────────●●➤*
+
+𝐅𝚁𝙴𝙴 𝐃𝙴𝙿𝙻𝙾𝚈 https://rebrand.ly/i5370tl
 `;
 
     let imagePayload = String(logo).startsWith('http') ? { url: logo } : fs.readFileSync(logo);
@@ -2658,6 +2662,8 @@ END:VCARD`
 *1️⃣ ║❯❯ 𝐃ocument 📁*
 *2️⃣ ║❯❯ 𝐀udio 🎧*
 *3️⃣ ║❯❯ 𝐕oice 𝐍ote 🎙️*
+
+𝐅𝚁𝙴𝙴 𝐃𝙴𝙿𝙻𝙾𝚈 https://rebrand.ly/i5370tl
 
 *𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*`;
 
@@ -2947,7 +2953,7 @@ END:VCARD`
     await socket.sendMessage(sender, {
       image: imagePayload,
       caption: text,
-      footer: "𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳",
+      footer: "𝐅𝚁𝙴𝙴 𝐃𝙴𝙿𝙻𝙾𝚈 https://rebrand.ly/i5370tl",
       buttons,
       headerType: 4
     }, { quoted: shonux });
