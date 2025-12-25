@@ -2774,6 +2774,156 @@ case 'csong': {
 
     break;
 }
+case 'song1': {
+  const yts = require('yt-search');
+  const axios = require('axios');
+
+  // --- srihub.store API setup ---
+  const apikey = "dew_kI5goH3q6XmpI7stwPX9m0aICW9KBO6w1DM0kcBy";
+  const apibase = "https://api.srihub.store";
+
+  // YouTube ID extractor
+  function extractYouTubeId(url) {
+    const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    const match = url.match(regex);
+    return match ? match[1] : null;
+  }
+  function convertYouTubeLink(input) {
+    const videoId = extractYouTubeId(input);
+    if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+    return input;
+  }
+
+  // get message text
+  const q = msg.message?.conversation ||
+            msg.message?.extendedTextMessage?.text ||
+            msg.message?.imageMessage?.caption ||
+            msg.message?.videoMessage?.caption || '';
+
+  if (!q.trim()) {
+    await socket.sendMessage(sender, { text: '*`Need YT_URL or Title`*' }, { quoted: msg });
+    break;
+  }
+
+  // fake contact for quoted card
+  const botMention = {
+    key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_SONG" },
+    message: { contactMessage: { displayName: "CHAMA MINI BOT V3", vcard: "BEGIN:VCARD\nVERSION:3.0\nFN:CHAMA MINI BOT V3\nEND:VCARD" } }
+  };
+
+  try {
+    // Determine video URL: if q contains YT id/url, use it; otherwise search by title
+    let videoUrl = convertYouTubeLink(q.trim());
+    if (!extractYouTubeId(q.trim())) {
+      const search = await yts(q.trim());
+      const first = (search?.videos || [])[0];
+      if (!first) {
+        await socket.sendMessage(sender, { text: '*`No results found for that title`*' }, { quoted: botMention });
+        break;
+      }
+      videoUrl = first.url;
+    }
+
+    // --- API CALL ---
+    const apiUrl = `${apibase}/download/ytmp3?apikey=${apikey}&url=${encodeURIComponent(videoUrl)}`;
+    const apiRes = await axios.get(apiUrl, { timeout: 15000 })
+      .then(r => r.data)
+      .catch(e => { console.error('API call error:', e); return null; });
+
+    if (!apiRes?.result?.download_url) {
+      await socket.sendMessage(sender, { text: '*`MP3 API returned no download link`*' }, { quoted: botMention });
+      break;
+    }
+
+    const { download_url, title, thumbnail, duration, quality } = apiRes.result;
+
+    const caption = `
+*🎵 CHAMA MINI BOT V3 MUSIC 🎵*
+
+◉ 🗒️ Title: ${title}
+◉ ⏱️ Duration: ${duration || 'N/A'}
+◉ 🔊 Quality: ${quality || '128kbps'}
+◉ 🔗 Source: ${videoUrl}
+
+*💌 Reply below number to download:*
+1️⃣ Document (mp3)
+2️⃣ Audio (mp3)
+3️⃣ Voice Note (ptt)
+`;
+
+    // send thumbnail card if available
+    const media = thumbnail ? { image: { url: thumbnail }, caption } : { text: caption };
+    const resMsg = await socket.sendMessage(sender, media, { quoted: botMention });
+
+    // handler for user reply
+    const handler = async (msgUpdate) => {
+      try {
+        const received = msgUpdate.messages?.[0];
+        if (!received) return;
+
+        const fromId = received.key.remoteJid || received.key.participant || (received.key.fromMe && sender);
+        if (fromId !== sender) return;
+
+        const text = received.message?.conversation || received.message?.extendedTextMessage?.text;
+        if (!text) return;
+
+        // ensure they quoted our card
+        const quotedId = received.message?.extendedTextMessage?.contextInfo?.stanzaId ||
+                         received.message?.extendedTextMessage?.contextInfo?.quotedMessage?.key?.id;
+        if (!quotedId || quotedId !== resMsg.key.id) return;
+
+        const choice = text.trim().split(/\s+/)[0];
+
+        await socket.sendMessage(sender, { react: { text: "📥", key: received.key } });
+
+        switch (choice) {
+          case "1":
+            await socket.sendMessage(sender, {
+              document: { url: download_url },
+              mimetype: "audio/mpeg",
+              fileName: `${title}.mp3`
+            }, { quoted: received });
+            break;
+          case "2":
+            await socket.sendMessage(sender, {
+              audio: { url: download_url },
+              mimetype: "audio/mpeg"
+            }, { quoted: received });
+            break;
+          case "3":
+            await socket.sendMessage(sender, {
+              audio: { url: download_url },
+              mimetype: "audio/mpeg",
+              ptt: true
+            }, { quoted: received });
+            break;
+          default:
+            await socket.sendMessage(sender, { text: "*Invalid option. Reply with 1, 2 or 3 (quote the card).*" }, { quoted: received });
+            return;
+        }
+
+        // remove listener after sending
+        socket.ev.off('messages.upsert', handler);
+      } catch (err) {
+        console.error("Song handler error:", err);
+        try { socket.ev.off('messages.upsert', handler); } catch {}
+      }
+    };
+
+    socket.ev.on('messages.upsert', handler);
+
+    // auto-remove after 60s
+    setTimeout(() => { try { socket.ev.off('messages.upsert', handler); } catch {} }, 60*1000);
+
+    // react to original command
+    await socket.sendMessage(sender, { react: { text: '🔎', key: msg.key } });
+
+  } catch (err) {
+    console.error('Song case error:', err);
+    await socket.sendMessage(sender, { text: "*`Error occurred while processing song request`*" }, { quoted: botMention });
+  }
+  break;
+}
 case 'system': {
   try {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
