@@ -1831,7 +1831,7 @@ break;
         await socket.sendMessage(sender, {
             image: { url: thumbnailUrl },
             caption: formatMessage(
-                '📰 𝐇ɪʀᴜ x 𝐌ᴅ 𝐍ᴇᴡꜱ 📰',
+                '📰 𝐙𝙰𝙽𝚃𝙰 x 𝐌ᴅ 𝐍ᴇᴡꜱ 📰',
                 `📢 *${title}*\n\n${desc}\n\n🕒 *𝐃ate*: ${date || 'තවම ලබාදීලා නැත'}\n🌐 *Link*: ${link}`,
                 '> *𝐇𝙸𝚁𝚄 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*'
             )
