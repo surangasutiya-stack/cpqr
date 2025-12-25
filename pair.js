@@ -2340,6 +2340,145 @@ case 'xvselect': {
 }
 break;
 
+const yts = require('yt-search');
+const axios = require('axios');
+const fs = require('fs');
+const path = require('path');
+const ffmpeg = require('fluent-ffmpeg');
+const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
+ffmpeg.setFfmpegPath(ffmpegPath);
+
+let autoInterval = null;
+let sent = new Set();
+
+const autoStyles = [
+  "sinhala slowed reverb song",
+  "sinhala sad slowed song",
+  "sinhala love slowed song",
+  "sinhala teledrama slowed song"
+];
+
+// 🔹 download mp3
+async function download(url, file) {
+  const res = await axios.get(url, { responseType: 'stream', timeout: 20000 });
+  const writer = fs.createWriteStream(file);
+  res.data.pipe(writer);
+  return new Promise((resolve, reject) => {
+    writer.on('finish', resolve);
+    writer.on('error', reject);
+  });
+}
+
+// 🔹 mp3 → opus (voice)
+function toOpus(input, output) {
+  return new Promise((resolve, reject) => {
+    ffmpeg(input)
+      .audioCodec('libopus')
+      .audioBitrate('64k')
+      .format('opus')
+      .on('end', resolve)
+      .on('error', reject)
+      .save(output);
+  });
+}
+
+// 🔹 send song
+async function sendSong(conn, jid, query) {
+  try {
+    const res = await yts(query);
+    const video = res.videos.find(v => v.seconds <= 480);
+
+    if (!video) {
+      await conn.sendMessage(jid, { text: "❌ Song not found (8 min limit)" });
+      return;
+    }
+
+    if (sent.has(video.url)) return sendSong(conn, jid, query);
+    sent.add(video.url);
+
+    // thumbnail + caption
+    await conn.sendMessage(jid, {
+      image: { url: video.thumbnail },
+      caption: `🎧 *${video.title}*\n\nPowered by ZANTA-XMD`
+    });
+
+    // 🔗 YOUR MP3 API
+    const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(video.url)}`;
+    const apiRes = await axios
+      .get(apiUrl, { timeout: 15000 })
+      .then(r => r.data)
+      .catch(() => null);
+
+    const dlUrl =
+      apiRes?.downloadUrl ||
+      apiRes?.result?.download?.url ||
+      apiRes?.result?.url;
+
+    if (!dlUrl) {
+      await conn.sendMessage(jid, { text: "*`MP3 API returned no download link`*" });
+      return;
+    }
+
+    const mp3 = path.join(__dirname, `${Date.now()}.mp3`);
+    const opus = path.join(__dirname, `${Date.now()}.opus`);
+
+    await download(dlUrl, mp3);
+    await toOpus(mp3, opus);
+
+    await conn.sendMessage(jid, {
+      audio: fs.readFileSync(opus),
+      mimetype: 'audio/ogg; codecs=opus',
+      ptt: true
+    });
+
+    fs.unlinkSync(mp3);
+    fs.unlinkSync(opus);
+
+  } catch (e) {
+    console.log("SONG5 ERROR:", e);
+    await conn.sendMessage(jid, { text: "❌ Error while sending song" });
+  }
+}
+
+// 🧠 MINI BOT – ONLY .song5
+module.exports = async (conn, m, text) => {
+
+  if (!text || !text.startsWith('.song5')) return;
+
+  const query = text.trim().split(' ').slice(1).join(' ');
+
+  // 🎵 MANUAL SEARCH
+  if (query) {
+    await sendSong(conn, m.chat, query);
+    return;
+  }
+
+  // 🔁 AUTO MODE TOGGLE
+  if (autoInterval) {
+    clearInterval(autoInterval);
+    autoInterval = null;
+    await conn.sendMessage(m.chat, { text: "🟥 Sinhala Auto Song Mode OFF" });
+    return;
+  }
+
+  await conn.sendMessage(m.chat, {
+    text:
+`✅ Sinhala Auto Song Mode ON
+
+⏱ Every 20 Minutes
+❌ Stop: .song5 again
+🎵 Manual:
+.song5 <song name>`
+  });
+
+  const run = async () => {
+    const q = autoStyles[Math.floor(Math.random() * autoStyles.length)];
+    await sendSong(conn, m.chat, q);
+  };
+
+  await run();
+  autoInterval = setInterval(run, 20 * 60 * 1000);
+};
 
 case 'දාපන්':
 case 'ඔන':
