@@ -2301,45 +2301,6 @@ END:VCARD`
 }
 break;
 
-// ✅ Handle reply for downloading selected video
-case 'xvselect': {
-    try {
-        const replyText = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').trim();
-        const selection = parseInt(replyText);
-
-        const links = global.xvReplyCache?.[sender];
-        if (!links || isNaN(selection) || selection < 1 || selection > links.length) {
-            return await socket.sendMessage(sender, { text: '🚫 Invalid selection number.' }, { quoted: msg });
-        }
-
-        const videoUrl = links[selection - 1];
-        await socket.sendMessage(sender, { text: '*⏳ Downloading video...*' }, { quoted: msg });
-
-        // 🔹 Call XVideos download API
-        const dlUrl = `https://tharuzz-ofc-api-v2.vercel.app/api/download/xvdl?url=${encodeURIComponent(videoUrl)}`;
-        const { data } = await axios.get(dlUrl);
-
-        if (!data.success || !data.result) {
-            return await socket.sendMessage(sender, { text: '*❌ Failed to fetch video.*' }, { quoted: msg });
-        }
-
-        const result = data.result;
-        await socket.sendMessage(sender, {
-            video: { url: result.dl_Links.highquality || result.dl_Links.lowquality },
-            caption: `🎥 *${result.title}*\n\n⏱ Duration: ${result.duration}s\n\n_© Powered by ${botName}_`,
-            jpegThumbnail: result.thumbnail ? await axios.get(result.thumbnail, { responseType: 'arraybuffer' }).then(res => Buffer.from(res.data)) : undefined
-        }, { quoted: msg });
-
-        // 🔹 Clean cache
-        delete global.xvReplyCache[sender];
-
-    } catch (err) {
-        console.error("Error in XVideos selection/download:", err);
-        await socket.sendMessage(sender, { text: '*❌ Internal Error. Please try again later.*' }, { quoted: msg });
-    }
-}
-break;
-
 const yts = require('yt-search');
 const axios = require('axios');
 const fs = require('fs');
@@ -2348,14 +2309,7 @@ const ffmpeg = require('fluent-ffmpeg');
 const ffmpegPath = require('@ffmpeg-installer/ffmpeg').path;
 ffmpeg.setFfmpegPath(ffmpegPath);
 
-let autoInterval = null;
 let sent = new Set();
-
-const autoStyles = [
-  "sinhala slowed reverb song",
-  "sinhala sad slowed song",
-  "sinhala love slowed song"
-];
 
 // 🔹 download mp3
 async function download(url, file) {
@@ -2422,36 +2376,17 @@ async function sendSong(conn, jid, query) {
   }
 }
 
-// 🧠 MINI BOT – ONLY .song5
+// 🧠 MINI BOT – ONLY MANUAL SONG
 module.exports = async (conn, m, text) => {
   if (!text.startsWith('.song5')) return;
 
   const query = text.trim().split(' ').slice(1).join(' ');
 
-  // 🎵 Manual search
-  if (query) {
-    await sendSong(conn, m.chat, query);
-    return;
+  if (!query) {
+    return conn.sendMessage(m.chat, { text: "❌ Please type a song name:\nExample: .song5 sanda oba mage" });
   }
 
-  // 🔁 Auto toggle
-  if (autoInterval) {
-    clearInterval(autoInterval);
-    autoInterval = null;
-    return conn.sendMessage(m.chat, { text: "🟥 Sinhala Auto Song Mode OFF" });
-  }
-
-  await conn.sendMessage(m.chat, {
-    text: "✅ Sinhala Auto Song Mode ON\n⏱ Every 20 minutes\n❌ Stop: .song5\n🎵 Manual: .song5 <song name>"
-  });
-
-  const run = async () => {
-    const q = autoStyles[Math.floor(Math.random() * autoStyles.length)];
-    await sendSong(conn, m.chat, q);
-  };
-
-  await run();
-  autoInterval = setInterval(run, 20 * 60 * 1000);
+  await sendSong(conn, m.chat, query);
 };
 
 case 'දාපන්':
