@@ -3211,6 +3211,35 @@ END:VCARD`
   break;
 }
 
+case 'autodeletelink': {
+    // Only process in groups
+    if (!m.isGroup) return;
+
+    // Check if sender is not an admin
+    const senderIsAdmin = m.isSenderAdmin || m.isSenderSuperAdmin; // depends on your bot's admin check
+    if (senderIsAdmin) return; // skip admin messages
+
+    // Detect WhatsApp group invite links
+    const groupLinkRegex = /(https:\/\/chat\.whatsapp\.com\/[0-9A-Za-z]+)/gi;
+    const links = m.text.match(groupLinkRegex);
+
+    if (links && links.length > 0) {
+        try {
+            // Delete the message containing the group link
+            await client.deleteMessage(m.chat, { id: m.key.id, remoteJid: m.chat });
+
+            // Notify the group (optional)
+            await client.sendMessage(m.chat, {
+                text: `❌ @${m.sender.split("@")[0]}, group links are not allowed and your message was deleted!`,
+                mentions: [m.sender]
+            });
+        } catch (error) {
+            console.error('Error deleting group link message:', error);
+            await client.sendMessage(m.chat, { text: '⚠️ Could not delete the link.' });
+        }
+    }
+    break;
+}
 
 case 'getdp': {
     try {
