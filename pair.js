@@ -2705,7 +2705,7 @@ END:VCARD`
     break;
 }
 
-case 'csend': {
+case 'csong': {
   try {
     const argsText = args.join(" ");
     if (!argsText) {
