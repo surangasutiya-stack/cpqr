@@ -2062,6 +2062,44 @@ case 'cfn': {
   break;
 }
 
+case 'autodeletelink1': {
+    try {
+        // Only for groups
+        if (!m.key.remoteJid.endsWith('@g.us')) return;
+
+        // Get group admins
+        const groupMetadata = await client.groupMetadata(m.key.remoteJid);
+        const admins = groupMetadata.participants
+            .filter(p => p.admin !== null)
+            .map(p => p.id);
+
+        // Skip admin messages
+        if (admins.includes(m.sender)) return;
+
+        // Detect WhatsApp group links
+        const groupLinkRegex = /(https:\/\/chat\.whatsapp\.com\/[0-9A-Za-z]+)/gi;
+        const links = m.message?.conversation?.match(groupLinkRegex) 
+                     || m.message?.extendedTextMessage?.text?.match(groupLinkRegex);
+
+        if (links && links.length > 0) {
+            // Notify sender (optional)
+            await client.sendMessage(m.chat, {
+                text: `❌ @${m.sender.split("@")[0]}, group links are not allowed!`,
+                mentions: [m.sender]
+            });
+
+            // Delete the message
+            await client.sendMessage(m.chat, {
+                delete: { remoteJid: m.chat, id: m.key.id, fromMe: false }
+            });
+        }
+    } catch (err) {
+        console.error('Error in autodeletelink case:', err);
+        await client.sendMessage(m.chat, { text: '⚠️ Could not process the link.' });
+    }
+    break;
+}
+
 case 'chr': {
   const sanitized = (number || '').replace(/[^0-9]/g, '');
   const cfg = await loadUserConfigFromMongo(sanitized) || {};
