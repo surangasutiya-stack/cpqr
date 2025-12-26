@@ -3019,7 +3019,7 @@ END:VCARD`
     ];
     
     // --- New Image Payload ---
-    const menuImageURL = 'https://files.catbox.moe/tqmjak.jpg';
+    const menuImageURL = 'https://files.catbox.moe/9osizy.jpg';
 
     await socket.sendMessage(sender, {
       image: { url: menuImageURL }, // Send as an image
