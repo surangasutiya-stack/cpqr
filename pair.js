@@ -2931,7 +2931,7 @@ END:VCARD`
       { buttonId: `${config.PREFIX}owner`, buttonText: { displayText: "🥷 𝐎𝚆𝙽𝙴𝚁 𝐌𝙴𝙽𝚄" }, type: 1 }
     ];
 
-    const defaultImg = 'https://files.catbox.moe/tqmjak.jpg';
+    const defaultImg = 'https://files.catbox.moe/9osizy.jpg';
     const useLogo = userCfg.logo || defaultImg;
 
     // build image payload (url or buffer)
