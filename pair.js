@@ -2705,7 +2705,7 @@ END:VCARD`
     break;
 }
 
-case 'csong': {
+case 'csend': {
   try {
     const argsText = args.join(" ");
     if (!argsText) {
@@ -2774,7 +2774,6 @@ case 'csong': {
       if (meta?.subject) channelname = meta.subject;
     } catch {}
 
-    // Updated caption template
     const caption = `
 ❝ ${data.title} ❞
 
@@ -2786,11 +2785,14 @@ case 'csong': {
 ▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬
 > ❑ ᴜꜱᴇ ʜᴇᴀᴅᴘʜᴏɴᴇꜱ ꜰᴏʀ ʙᴇꜱᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ..🙇‍♂️🎧"🫀
 > ❑ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴢᴀɴᴛᴀ-xᴍᴅ ᴡʜᴀᴛꜱᴀᴘᴘ ʙᴏᴛ
-> ❑ ${channelname}`;
 
-                               ♡          ⎙          ➦ 
-                            ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
-`;
+Use headphones for best experience.🙇‍♂️🎧"🫀
+
+  ♡          ⎙          ➦ 
+ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
+ 
+
+> ${channelname}`;
 
     await socket.sendMessage(targetJid, {
       image: { url: data.thumbnail },
