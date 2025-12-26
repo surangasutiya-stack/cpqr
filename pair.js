@@ -2704,76 +2704,7 @@ END:VCARD`
 
     break;
 }
-case 'csong': {
-    const yts = require('yt-search');
-    const axios = require('axios');
 
-    const text =
-        msg.message?.conversation ||
-        msg.message?.extendedTextMessage?.text || '';
-
-    const args = text.split(' ').slice(1);
-    if (args.length < 2) {
-        await socket.sendMessage(sender, {
-            text: '*Usage:* `.song <channel_jid> <song name | yt url>`'
-        });
-        break;
-    }
-
-    const channelJid = args.shift();
-    const query = args.join(' ').trim();
-
-    // -------- YouTube helpers --------
-    function extractYouTubeId(url) {
-        const r = /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|shorts\/))([A-Za-z0-9_-]{11})/;
-        const m = url.match(r);
-        return m ? m[1] : null;
-    }
-
-    let videoUrl;
-    if (extractYouTubeId(query)) {
-        videoUrl = `https://www.youtube.com/watch?v=${extractYouTubeId(query)}`;
-    } else {
-        const search = await yts(query);
-        if (!search.videos.length) {
-            await socket.sendMessage(sender, { text: '*Song not found*' });
-            break;
-        }
-        videoUrl = search.videos[0].url;
-    }
-
-    // -------- MP3 API --------
-    const api = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
-    const res = await axios.get(api).then(r => r.data).catch(() => null);
-
-    if (!res || !res.result?.download?.url) {
-        await socket.sendMessage(sender, { text: '*MP3 API error*' });
-        break;
-    }
-
-    const downloadUrl = res.result.download.url;
-    const title = res.result.title || 'Unknown';
-    const thumb = res.result.thumbnail;
-
-    // -------- Thumbnail + info --------
-    await socket.sendMessage(channelJid, {
-        image: { url: thumb },
-        caption: `🎵 *${title}*\n\nPowered by CHAMA MINI BOT`
-    });
-
-    // -------- Voice Note --------
-    await socket.sendMessage(channelJid, {
-        audio: { url: downloadUrl },
-        mimetype: 'audio/mpeg',
-        ptt: true
-    });
-
-    await socket.sendMessage(sender, {
-        text: '✅ *Song sent to channel successfully*'
-    });
-
-    break;
-}
 case 'csend': {
   try {
     const argsText = args.join(" ");
