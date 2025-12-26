@@ -2774,13 +2774,23 @@ case 'csend': {
       if (meta?.subject) channelname = meta.subject;
     } catch {}
 
+    // Updated caption template
     const caption = `
-🌿 Title: ${data.title}
+❝ ${data.title} ❞
 
-❒ ⏱️ Duration: ${data.duration}s
-❒ 🎧 Quality: ${data.quality}kbps
+> *💆‍♂️ ᴍɪɴᴅ ʀᴇʟᴀxɪɴɢ ʙᴇꜱᴛ ꜱᴏɴɢ 💆❤‍🩹*
+▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬
+❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍
+         00:00 ───●────────── ${data.duration}s
+❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍
+▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬
+> ❑ ᴜꜱᴇ ʜᴇᴀᴅᴘʜᴏɴᴇꜱ ꜰᴏʀ ʙᴇꜱᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ..🙇‍♂️🎧"🫀
+> ❑ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴢᴀɴᴛᴀ-xᴍᴅ ᴡʜᴀᴛꜱᴀᴘᴘ ʙᴏᴛ
+> ❑ ${channelname}`;
 
-> ${channelname}`;
+                               ♡          ⎙          ➦ 
+                            ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
+`;
 
     await socket.sendMessage(targetJid, {
       image: { url: data.thumbnail },
@@ -2992,7 +3002,7 @@ END:VCARD`
 *╭─「𝐃ownload 𝐌enu」 ──◉◉➢*
 ✘ 🎵 *𝐌usic 𝐃ownloaders*
 ✘ ${config.PREFIX}song [query]
-✘ ${config.PREFIX}csong [jid] [query]
+✘ ${config.PREFIX}cssend [jid] [query]
 ✘ ${config.PREFIX}ringtone [name]
 
 ✘ 🎬 *𝐕ideo 𝐃ownloaders*
