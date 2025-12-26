@@ -1916,7 +1916,7 @@ case 'fbd': {
         // 🔹 Load bot name dynamically
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+        let botName = cfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
         // 🔹 Fake contact for Meta AI mention
         const shonux = {
@@ -2194,7 +2194,7 @@ END:VCARD`
         // Catch block Meta mention
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+        let botName = cfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
         const shonux = {
             key: {
@@ -3319,7 +3319,7 @@ case 'owner': {
   try {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+    const title = userCfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
     const shonux = {
         key: {
@@ -3471,7 +3471,7 @@ END:VCARD` } }
         const buttonMessage = {
             image: { url: randomImage },
             caption: `🖼️ *𝐈mage 𝐒earch:* ${q}\n\n*𝐏rovided 𝐁y ${botName}*`,
-            footer: config.FOOTER || '> *𝐇𝙸𝚁𝚄 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*',
+            footer: config.FOOTER || '> *𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*',
             buttons: buttons,
              headerType: 4,
             contextInfo: { mentionedJid: [sender] }
@@ -3725,7 +3725,7 @@ END:VCARD` } }
     console.error('unfollow error', e);
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+    const title = userCfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
     const shonux = {
         key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_UNFOLLOW5" },
         message: { contactMessage: { displayName: title, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${title};;;;\nFN:${title}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
@@ -4232,7 +4232,7 @@ case 'font': {
     // ?? Load bot name dynamically
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     let cfg = await loadUserConfigFromMongo(sanitized) || {};
-    let botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+    let botName = cfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
     // 🔹 Fake contact for Meta AI mention
     const botMention = {
@@ -4380,7 +4380,7 @@ END:VCARD`
         // ✅ In catch also send Meta mention style
         const sanitized = (number || '').replace(/[^0-9]/g, '');
         let cfg = await loadUserConfigFromMongo(sanitized) || {};
-        let botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+        let botName = cfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
         const shonux = {
             key: {
@@ -5079,7 +5079,7 @@ case 'deladmin': {
   if (!args || args.length === 0) {
     let userCfg = {};
     try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; } catch(e){ userCfg = {}; }
-    const title = userCfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+    const title = userCfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
     const shonux = {
       key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_FAKE_ID_DELADMIN1" },
@@ -5227,7 +5227,7 @@ case 'setlogo': {
 case 'jid': {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     const cfg = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ'; // dynamic bot name
+    const botName = cfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ'; // dynamic bot name
 
     const userNumber = sender.split('@')[0]; 
 
