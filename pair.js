@@ -2762,6 +2762,7 @@ case 'csend': {
       react: { text: "🎧", key: msg.key }
     });
 
+    // 🔍 YouTube search
     const yts = require("yt-search");
     const search = await yts(query);
 
@@ -2776,6 +2777,7 @@ case 'csend': {
 
     const ytUrl = video.url;
 
+    // 🎵 Download via API
     const axios = require("axios");
     const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
     const { data } = await axios.get(apiUrl);
@@ -2784,6 +2786,7 @@ case 'csend': {
       return reply("❌ API error! ගීතය බාගත කළ නොහැක.");
     }
 
+    // 🔄 Convert to opus (PTT)
     const fs = require("fs");
     const path = require("path");
     const ffmpeg = require("fluent-ffmpeg");
@@ -2807,40 +2810,51 @@ case 'csend': {
         .save(opusPath);
     });
 
+    // 📛 Channel / Group name
     let channelname = targetJid;
     try {
       const meta = await socket.groupMetadata(targetJid);
       if (meta?.subject) channelname = meta.subject;
     } catch {}
 
-    const caption = `
-> ❝ ${data.title} ❞
-
-> *💆‍♂️ ᴍɪɴᴅ ʀᴇʟᴀxɪɴɢ ʙᴇꜱᴛ ꜱᴏɴɢ 💆❤‍🩹*
-▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬
-❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍
-         00:00 ───●────────── ${data.duration}s
-❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍❍
-▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬▭▬
-> ❑ ᴜꜱᴇ ʜᴇᴀᴅᴘʜᴏɴᴇꜱ ꜰᴏʀ ʙᴇꜱᴛ ᴇxᴘᴇʀɪᴇɴᴄᴇ..🙇‍♂️🎧"🫀
-> ❑ ᴘᴏᴡᴇʀᴇᴅ ʙʏ ᴢᴀɴᴛᴀ-xᴍᴅ ᴡʜᴀᴛꜱᴀᴘᴘ ʙᴏᴛ
-> ❑ ${channelname}`;
-
-    await socket.sendMessage(targetJid, {
+    // 🖼️ IMAGE + TITLE (main response)
+    const imgMsg = await socket.sendMessage(targetJid, {
       image: { url: data.thumbnail },
-      caption
+      caption: `🎧 *${data.title}*
+
+💆‍♂️ Mind Relaxing Best Song 💆❤‍🩹
+▬▬▬▬▬▬▬▬▬▬▬▬
+❑ Use Headphones 🎧
+❑ Powered by Zanta-XMD
+❑ ${channelname}`,
+      contextInfo: {
+        externalAdReply: {
+          title: data.title,
+          body: "Mind Relaxing Song",
+          thumbnailUrl: data.thumbnail,
+          mediaType: 1,
+          renderLargerThumbnail: true
+        }
+      }
     });
 
-    await socket.sendMessage(targetJid, {
-      audio: { url: opusPath },
-      mimetype: "audio/ogg; codecs=opus",
-      ptt: true
-    });
+    // 🎙️ AUDIO (reply to image → same response feel)
+    await socket.sendMessage(
+      targetJid,
+      {
+        audio: fs.readFileSync(opusPath),
+        mimetype: "audio/ogg; codecs=opus",
+        ptt: true
+      },
+      { quoted: imgMsg }
+    );
 
+    // ✅ Confirmation to sender
     await socket.sendMessage(sender, {
       text: `✅ *"${data.title}"* sent to *${channelname}* 🎶`
     });
 
+    // 🧹 Cleanup
     fs.unlinkSync(mp3Path);
     fs.unlinkSync(opusPath);
 
