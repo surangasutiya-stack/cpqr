@@ -2892,27 +2892,28 @@ case 'system': {
   break;
 }
 case 'menu': {
-  try { await socket.sendMessage(sender, { react: { text: "📄", key: msg.key } }); } catch(e){}
+  try { 
+    await socket.sendMessage(sender, { react: { text: "📄", key: msg.key } }); 
+  } catch(e){}
 
   try {
-    // --- 1. SEND PRE-MENU VIDEO (The 'pvt round') ---
-    // The video you requested to send before the menu
+    // --- 1. SEND PRE-MENU VIDEO NOTE (round / circular) ---
     const preMenuVideoURL = 'https://files.catbox.moe/84bc8r.mp4';
-    
-    // Check if the file is accessible before trying to send it
+
     try {
         await socket.sendMessage(sender, {
-            video: { url: preMenuVideoURL },
-            mimetype: 'video/mp4',
-            caption: 'Processing...', // Optional: A quick caption for the video
-            gifPlayback: true // Optional: if you want it to play as a GIF loop in the chat
+            videoNote: { 
+                url: preMenuVideoURL, 
+                mimetype: 'video/mp4',
+                // duration: 10, // optional
+                // height: 640 // optional square size
+            },
+            caption: 'Processing...', // optional
         }, { quoted: msg });
-    } catch(videoError) {
-        // Log the error but continue to send the main menu
-        console.warn('menu: Failed to send pre-menu video, continuing with menu.', videoError);
+    } catch(videoNoteError) {
+        console.warn('menu: Failed to send pre-menu video note, continuing with menu.', videoNoteError);
     }
     // ----------------------------------------------------
-
 
     const startTime = socketCreationTime.get(number) || Date.now();
     const uptime = Math.floor((Date.now() - startTime) / 1000);
@@ -2922,8 +2923,13 @@ case 'menu': {
 
     // load per-session config (logo, botName)
     let userCfg = {};
-    try { if (number && typeof loadUserConfigFromMongo === 'function') userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; }
-    catch(e){ console.warn('menu: failed to load config', e); userCfg = {}; }
+    try { 
+      if (number && typeof loadUserConfigFromMongo === 'function') 
+        userCfg = await loadUserConfigFromMongo((number || '').replace(/[^0-9]/g, '')) || {}; 
+    } catch(e){ 
+      console.warn('menu: failed to load config', e); 
+      userCfg = {}; 
+    }
 
     const title = userCfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
@@ -2952,7 +2958,8 @@ END:VCARD`
     const text = `
 *HI 👋 ${title} MINI BOT USER 😉💗*
 
-*╭─「 𝐁ot 𝐒tatus 」 ───◉◉➢* *│📄 𝐁ot 𝐍ame :*${title}
+*╭─「 𝐁ot 𝐒tatus 」 ───◉◉➢* 
+*│📄 𝐁ot 𝐍ame :* ${title}
 *│🥷 𝐎wner :* ${config.OWNER_NAME || 'Hirun Vikasitha'}
 *│📡 𝐕ersion :* ${config.BOT_VERSION || '0.0001+'}
 *│🏷️ 𝐏latform :* ${process.env.PLATFORM || 'Heroku'}
