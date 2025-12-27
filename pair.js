@@ -3774,7 +3774,7 @@ END:VCARD` } }
 
 
 
-        case 'unfollow': {
+        case 'kkk': {
   const jid = args[0] ? args[0].trim() : null;
   if (!jid) {
     let userCfg = {};
