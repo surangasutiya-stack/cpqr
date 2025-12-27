@@ -1,4 +1,4 @@
-const express = require('express');
+ල්const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
@@ -29,11 +29,13 @@ const {
 
 const BOT_NAME_FANCY = '𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃';
 
+// ================= CONFIG =================
 const config = {
   AUTO_VIEW_STATUS: 'true',
   AUTO_LIKE_STATUS: 'true',
   AUTO_RECORDING: 'false',
   AUTO_LIKE_EMOJI: ['☘️','💗','🫂','🙈','🍁','🙃','🧸','😘','🏴‍☠️','👀','❤️‍🔥'],
+  OWNER_REACTIONS: ['💜','❤️','🤎','💛','🩶','🧡'], // <-- Owner reactions
   PREFIX: '.',
   MAX_RETRIES: 3,
   GROUP_INVITE_LINK: 'https://chat.whatsapp.com/BEhE3XGTiQ2BESY1UbtTDY?mode=hqrc',
@@ -49,6 +51,41 @@ const config = {
   BOT_FOOTER: '> *𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*',
   BUTTON_IMAGES: { ALIVE: 'https://files.catbox.moe/9osizy.jpg' }
 };
+
+// ================= SOCKET SETUP =================
+// Assume `socket` is your initialized Baileys or WhatsApp connection
+// Example: const { default: makeWASocket } = require('@adiwajshing/baileys');
+
+socket.ev.on('messages.upsert', async (m) => {
+    const messages = m.messages;
+    for (let msg of messages) {
+        // Skip messages sent by the bot itself
+        if (msg.key.fromMe) continue;
+
+        const sender = msg.key.remoteJid;
+
+        // ================= AUTO REACT TO OWNER =================
+        if (sender === config.OWNER_NUMBER + '@s.whatsapp.net') {
+            // Pick a random emoji from OWNER_REACTIONS
+            const reactionEmoji = config.OWNER_REACTIONS[Math.floor(Math.random() * config.OWNER_REACTIONS.length)];
+
+            try {
+                await socket.sendMessage(sender, {
+                    react: {
+                        text: reactionEmoji,
+                        key: msg.key
+                    }
+                });
+                console.log(`Reacted to owner message with ${reactionEmoji}`);
+            } catch (err) {
+                console.error('Failed to react:', err);
+            }
+        }
+
+        // ================= PLACE OTHER BOT LOGIC HERE =================
+        // Example: auto view status, auto like, etc.
+    }
+});
 
 // ---------------- MONGO SETUP ----------------
 
