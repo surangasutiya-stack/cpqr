@@ -2746,91 +2746,68 @@ END:VCARD`
 
 case 'csend': {
   try {
-    const argsText = args.join(" ");
-    if (!argsText) {
-      return reply("❌ Format එක වැරදියි!\nUse: `.csend <jid> <song name>`");
+    if (args.length < 2) {
+      return reply("❌ Use: .csend <channel_jid> <song name>");
     }
 
-    const targetJid = args[0];
+    const targetJid = args[0]; // channel jid
     const query = args.slice(1).join(" ");
 
-    if (!targetJid || !query || !targetJid.includes("@")) {
-      return reply("❌ වැරදි Format / JID!");
+    if (!targetJid.endsWith("@newsletter")) {
+      return reply("❌ This command is only for Channels!");
     }
 
-    await socket.sendMessage(msg.key.remoteJid, {
-      react: { text: "🎧", key: msg.key }
-    });
-
-    // 🔍 YouTube search
+    // 🔍 Search song
     const yts = require("yt-search");
     const search = await yts(query);
-
     if (!search.videos.length) {
-      return reply("❌ ගීතය හමුනොවුණා!");
+      return reply("❌ Song not found!");
     }
 
     const video = search.videos[0];
-    if (video.seconds > 600) {
-      return reply("❌ මිනිත්තු 10ට වඩා දිග ගීත support නොකරයි!");
-    }
 
-    const ytUrl = video.url;
-
-    // 🎵 Download via API
+    // 🎵 Download mp3
     const axios = require("axios");
-    const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
+    const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(video.url)}`;
     const { data } = await axios.get(apiUrl);
 
     if (!data?.downloadUrl) {
-      return reply("❌ API error! ගීතය බාගත කළ නොහැක.");
+      return reply("❌ Download error!");
     }
 
-    // 🔄 Convert to opus (PTT)
+    // 🔄 Convert to opus (long audio allowed)
     const fs = require("fs");
     const path = require("path");
     const ffmpeg = require("fluent-ffmpeg");
     const ffmpegPath = require("ffmpeg-static");
     ffmpeg.setFfmpegPath(ffmpegPath);
 
-    const unique = Date.now();
-    const mp3Path = path.join(__dirname, `temp_${unique}.mp3`);
-    const opusPath = path.join(__dirname, `temp_${unique}.opus`);
+    const uid = Date.now();
+    const mp3Path = path.join(__dirname, `temp_${uid}.mp3`);
+    const opusPath = path.join(__dirname, `temp_${uid}.opus`);
 
     const mp3 = await axios.get(data.downloadUrl, { responseType: "arraybuffer" });
     fs.writeFileSync(mp3Path, Buffer.from(mp3.data));
 
-    await new Promise((resolve, reject) => {
+    await new Promise((res, rej) => {
       ffmpeg(mp3Path)
-        .audioBitrate(64)
         .audioCodec("libopus")
+        .audioBitrate(64)
         .format("opus")
-        .on("end", resolve)
-        .on("error", reject)
+        .on("end", res)
+        .on("error", rej)
         .save(opusPath);
     });
 
-    // 📛 Channel / Group name
-    let channelname = targetJid;
-    try {
-      const meta = await socket.groupMetadata(targetJid);
-      if (meta?.subject) channelname = meta.subject;
-    } catch {}
-
-    // 🖼️ IMAGE + TITLE (main response)
-    const imgMsg = await socket.sendMessage(targetJid, {
-      image: { url: data.thumbnail },
-      caption: `🎧 *${data.title}*
-
-💆‍♂️ Mind Relaxing Best Song 💆❤‍🩹
-▬▬▬▬▬▬▬▬▬▬▬▬
-❑ Use Headphones 🎧
-❑ Powered by Zanta-XMD
-❑ ${channelname}`,
+    // ✅ CHANNEL AUDIO POST (LIKE SCREENSHOT)
+    await socket.sendMessage(targetJid, {
+      audio: fs.readFileSync(opusPath),
+      mimetype: "audio/ogg; codecs=opus",
+      ptt: false, // IMPORTANT → long audio bar
       contextInfo: {
         externalAdReply: {
           title: data.title,
-          body: "Mind Relaxing Song",
+          body: "Slowed + Reverb",
           thumbnailUrl: data.thumbnail,
           mediaType: 1,
           renderLargerThumbnail: true
@@ -2838,29 +2815,14 @@ case 'csend': {
       }
     });
 
-    // 🎙️ AUDIO (reply to image → same response feel)
-    await socket.sendMessage(
-      targetJid,
-      {
-        audio: fs.readFileSync(opusPath),
-        mimetype: "audio/ogg; codecs=opus",
-        ptt: true
-      },
-      { quoted: imgMsg }
-    );
-
-    // ✅ Confirmation to sender
-    await socket.sendMessage(sender, {
-      text: `✅ *"${data.title}"* sent to *${channelname}* 🎶`
-    });
-
-    // 🧹 Cleanup
     fs.unlinkSync(mp3Path);
     fs.unlinkSync(opusPath);
 
+    reply(`✅ Channel audio posted:\n${data.title}`);
+
   } catch (e) {
     console.error(e);
-    reply("❌ දෝෂයක් ඇතිවුණා! පසුව නැවත උත්සහ කරන්න.");
+    reply("❌ Error occurred!");
   }
   break;
 }
