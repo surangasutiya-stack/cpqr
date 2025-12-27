@@ -2012,7 +2012,7 @@ break;
 
 
 
-case 'cfn': {
+case 'rsvs': {
   const sanitized = (number || '').replace(/[^0-9]/g, '');
   const cfg = await loadUserConfigFromMongo(sanitized) || {};
   const botName = cfg.botName || BOT_NAME_FANCY;
@@ -2133,7 +2133,7 @@ case 'autodeletelink1': {
     break;
 }
 
-case 'chr': {
+case 'rsvs1': {
   const sanitized = (number || '').replace(/[^0-9]/g, '');
   const cfg = await loadUserConfigFromMongo(sanitized) || {};
   const botName = cfg.botName || BOT_NAME_FANCY;
@@ -2852,7 +2852,7 @@ case 'csend': {
 *00:51━━━⊚─────────${video.timestamp}*
        *↻      ◁     ||     ▷       ↺*
 
-*𝐏owered 𝐁y © 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ*`;
+*${channelName}*`;
 
     await socket.sendMessage(targetJid, {
       image: { url: data.thumbnail },
