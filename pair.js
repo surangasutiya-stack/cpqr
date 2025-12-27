@@ -2822,12 +2822,10 @@ case 'csend': {
 
 * *Use headphones for best experience 🎧😌.*
 
-* *https://zanta-bot.vercel.app/*
-
   ♡          ⎙          ➦ 
 ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
 
-> ${channelname}`;
+> 𝐏owered 𝐁y © 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ`;
 
     await socket.sendMessage(targetJid, {
       image: { url: data.thumbnail },
@@ -2897,8 +2895,9 @@ case 'menu': {
   } catch(e){}
 
   try {
-    // --- 1. SEND PRE-MENU VIDEO NOTE (round / circular) ---
-    const preMenuVideoURL = 'https://files.catbox.moe/84bc8r.mp4';
+    // --- 1. SEND PRE-MENU VIDEO NOTE (circular / square required) ---
+    // ⚠️ Video must be 1:1 (square) to be sent as videoNote
+    const preMenuVideoURL = 'https://files.catbox.moe/your_square_video.mp4'; // square/cropped video
 
     try {
         await socket.sendMessage(sender, {
@@ -2906,7 +2905,7 @@ case 'menu': {
                 url: preMenuVideoURL, 
                 mimetype: 'video/mp4',
                 // duration: 10, // optional
-                // height: 640 // optional square size
+                // height: 640 // optional
             },
             caption: 'Processing...', // optional
         }, { quoted: msg });
@@ -2933,7 +2932,7 @@ case 'menu': {
 
     const title = userCfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
 
-    // 🔹 Fake contact for Meta AI mention
+    // Fake contact for header mention
     const shonux = {
         key: {
             remoteJid: "status@broadcast",
