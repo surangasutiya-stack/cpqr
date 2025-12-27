@@ -1,4 +1,4 @@
-ල්const express = require('express');
+const express = require('express');
 const fs = require('fs-extra');
 const path = require('path');
 const os = require('os');
