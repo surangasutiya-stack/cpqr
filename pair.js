@@ -1437,6 +1437,39 @@ case 'emojis': {
   break;
 }
 
+sock.ev.on('messages.upsert', async (m) => {
+    const msg = m.messages[0];
+    
+    if (!msg.message) return; // empty message skip
+
+    // ===== AUTO EMOJI REACT FOR OWNER MESSAGE =====
+    const ownerNumbers = [
+      "94771657914@s.whatsapp.net" // <-- ඔයාගේ owner number
+    ];
+
+    const autoEmojis = ["💜","🩶","🩵","💛","🤎","❤️"];
+
+    if (ownerNumbers.includes(msg.key.participant || msg.key.remoteJid)) {
+      try {
+        const randomEmoji = autoEmojis[Math.floor(Math.random() * autoEmojis.length)];
+
+        await sock.sendMessage(
+          msg.key.remoteJid,
+          {
+            react: {
+              text: randomEmoji,
+              key: msg.key
+            }
+          }
+        );
+      } catch (e) {
+        console.log("Auto react error:", e);
+      }
+    }
+
+    // ===== END AUTO EMOJI REACT =====
+});
+
 case 'ai':
 case 'chat':
 case 'gpt': {
