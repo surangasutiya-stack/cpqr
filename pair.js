@@ -2852,7 +2852,7 @@ case 'csend': {
 *00:51━━━⊚─────────${video.timestamp}*
        *↻      ◁     ||     ▷       ↺*
 
-*${channelName}*`;
+*「 ✦ ᴍɪɴᴇᴅ ʀᴇʟᴀxɪɴɢ ʙᴇꜱᴛ ꜱᴏɴɢ ✦ 」*`;
 
     await socket.sendMessage(targetJid, {
       image: { url: data.thumbnail },
