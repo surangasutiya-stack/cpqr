@@ -3640,6 +3640,95 @@ END:VCARD` } }
     break;
 }
 
+case 'news': {
+  try {
+    const chatJid = m.key.remoteJid; // command ගහපු chat
+    const subCmd = args[0]; // start / stop
+    const type = args[1] || 'ada'; // ada default
+
+    // ---------- STOP ----------
+    if (subCmd === 'stop') {
+      if (global.autoNewsIntervals[chatJid]) {
+        clearInterval(global.autoNewsIntervals[chatJid]);
+        delete global.autoNewsIntervals[chatJid];
+      }
+
+      await sock.sendMessage(chatJid, {
+        text: '🛑 *AUTO NEWS STOPPED*'
+      }, { quoted: m });
+
+      break;
+    }
+
+    // ---------- START ----------
+    if (subCmd === 'start') {
+      const api = {
+        ada: 'https://saviya-kolla-api.koyeb.app/news/ada',
+        sirasa: 'https://saviya-kolla-api.koyeb.app/news/sirasa',
+        lankadeepa: 'https://saviya-kolla-api.koyeb.app/news/lankadeepa',
+        gagana: 'https://saviya-kolla-api.koyeb.app/news/gagana'
+      };
+
+      // clear old interval
+      if (global.autoNewsIntervals[chatJid]) {
+        clearInterval(global.autoNewsIntervals[chatJid]);
+      }
+
+      global.autoNewsIntervals[chatJid] = setInterval(async () => {
+        const res = await axios.get(api[type]);
+        if (!res.data?.status) return;
+
+        const n = res.data.result;
+
+        const caption = `📰 *${n.title}*
+
+📅 ${n.date}
+⏰ ${n.time}
+
+${n.desc}
+
+🔗 ${n.url}`;
+
+        await sock.sendMessage(chatJid, {
+          image: { url: n.image },
+          caption
+        });
+      }, 1000 * 60 * 30); // 30 minutes
+
+      await sock.sendMessage(chatJid, {
+        text: `✅ *AUTO NEWS STARTED*
+
+📰 Source: *${type.toUpperCase()}*
+💬 Chat: *This Chat*
+⏱ Interval: *30 Minutes*
+
+.news stop → stop`
+      }, { quoted: m });
+
+      break;
+    }
+
+    // ---------- HELP ----------
+    await sock.sendMessage(chatJid, {
+      text: `❓ *AUTO NEWS HELP*
+
+.news start
+.news start ada
+.news start sirasa
+.news start lankadeepa
+.news start gagana
+
+.news stop`
+    }, { quoted: m });
+
+  } catch (err) {
+    console.error(err);
+    await sock.sendMessage(m.key.remoteJid, {
+      text: '❌ Auto news error'
+    }, { quoted: m });
+  }
+}
+break;
 
 case 'adanews': {
   try {
