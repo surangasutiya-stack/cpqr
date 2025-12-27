@@ -2746,83 +2746,110 @@ END:VCARD`
 
 case 'csend': {
   try {
-    if (args.length < 2) {
-      return reply("❌ Use: .csend <channel_jid> <song name>");
+    const argsText = args.join(" ");
+    if (!argsText) {
+      return reply("❌ Format එක වැරදියි!\nUse: `.csend <jid> <song name>`");
     }
 
-    const targetJid = args[0]; // channel jid
+    const targetJid = args[0];
     const query = args.slice(1).join(" ");
 
-    if (!targetJid.endsWith("@newsletter")) {
-      return reply("❌ This command is only for Channels!");
+    if (!targetJid || !query || !targetJid.includes("@")) {
+      return reply("❌ වැරදි Format / JID!");
     }
 
-    // 🔍 Search song
+    await socket.sendMessage(msg.key.remoteJid, {
+      react: { text: "🎧", key: msg.key }
+    });
+
     const yts = require("yt-search");
     const search = await yts(query);
+
     if (!search.videos.length) {
-      return reply("❌ Song not found!");
+      return reply("❌ ගීතය හමුනොවුණා!");
     }
 
     const video = search.videos[0];
+    if (video.seconds > 600) {
+      return reply("❌ මිනිත්තු 10ට වඩා දිග ගීත support නොකරයි!");
+    }
 
-    // 🎵 Download mp3
+    const ytUrl = video.url;
+
     const axios = require("axios");
-    const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(video.url)}`;
+    const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
     const { data } = await axios.get(apiUrl);
 
     if (!data?.downloadUrl) {
-      return reply("❌ Download error!");
+      return reply("❌ API error! ගීතය බාගත කළ නොහැක.");
     }
 
-    // 🔄 Convert to opus (long audio allowed)
     const fs = require("fs");
     const path = require("path");
     const ffmpeg = require("fluent-ffmpeg");
     const ffmpegPath = require("ffmpeg-static");
     ffmpeg.setFfmpegPath(ffmpegPath);
 
-    const uid = Date.now();
-    const mp3Path = path.join(__dirname, `temp_${uid}.mp3`);
-    const opusPath = path.join(__dirname, `temp_${uid}.opus`);
+    const unique = Date.now();
+    const mp3Path = path.join(__dirname, `temp_${unique}.mp3`);
+    const opusPath = path.join(__dirname, `temp_${unique}.opus`);
 
     const mp3 = await axios.get(data.downloadUrl, { responseType: "arraybuffer" });
     fs.writeFileSync(mp3Path, Buffer.from(mp3.data));
 
-    await new Promise((res, rej) => {
+    await new Promise((resolve, reject) => {
       ffmpeg(mp3Path)
-        .audioCodec("libopus")
         .audioBitrate(64)
+        .audioCodec("libopus")
         .format("opus")
-        .on("end", res)
-        .on("error", rej)
+        .on("end", resolve)
+        .on("error", reject)
         .save(opusPath);
     });
 
-    // ✅ CHANNEL AUDIO POST (LIKE SCREENSHOT)
+    let channelname = targetJid;
+    try {
+      const meta = await socket.groupMetadata(targetJid);
+      if (meta?.subject) channelname = meta.subject;
+    } catch {}
+
+    const caption = `
+❝ _${data.title}_ ❞
+
+*00:00 ───●────────── ${video.timestamp}*
+
+* *ඔයා කැමතිම පාටින් රිඇක්ට් එකක් දාගෙන යමුද ලස්සන ළමයෝ ...💗😽🍃*
+
+* *Use headphones for best experience 🎧😌.*
+
+* *https://zanta-bot.vercel.app/*
+
+  ♡          ⎙          ➦ 
+ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
+
+> ${channelname}`;
+
     await socket.sendMessage(targetJid, {
-      audio: fs.readFileSync(opusPath),
+      image: { url: data.thumbnail },
+      caption
+    });
+
+    await socket.sendMessage(targetJid, {
+      audio: { url: opusPath },
       mimetype: "audio/ogg; codecs=opus",
-      ptt: false, // IMPORTANT → long audio bar
-      contextInfo: {
-        externalAdReply: {
-          title: data.title,
-          body: "Slowed + Reverb",
-          thumbnailUrl: data.thumbnail,
-          mediaType: 1,
-          renderLargerThumbnail: true
-        }
-      }
+      ptt: true
+    });
+
+    await socket.sendMessage(sender, {
+      text: `✅ *"${data.title}"* sent to *${channelname}* 🎶`
     });
 
     fs.unlinkSync(mp3Path);
     fs.unlinkSync(opusPath);
 
-    reply(`✅ Channel audio posted:\n${data.title}`);
-
   } catch (e) {
     console.error(e);
-    reply("❌ Error occurred!");
+    reply("❌ දෝෂයක් ඇතිවුණා! පසුව නැවත උත්සහ කරන්න.");
   }
   break;
 }
