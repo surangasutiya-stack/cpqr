@@ -8,7 +8,7 @@ module.exports = {
     GROUP_INVITE_LINK: 'https://chat.whatsapp.com/BEhE3XGTiQ2BESY1UbtTDY?mode=wwc',
     ADMIN_LIST_PATH: './admin.json',
     IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
-    NEWSLETTER_JID: '120363406174896705@newsletter',
+    NEWSLETTER_JID: '120363423023499661@newsletter',
     NEWSLETTER_MESSAGE_ID: '428',
     OTP_EXPIRY: 300000,
     NEWS_JSON_URL: '',
@@ -17,5 +17,5 @@ module.exports = {
     OWNER_NUMBER: '94771657914',
     BOT_VERSION: '1.0.0',
     BOT_FOOTER: '> 𝐏𝙾𝚆𝙴𝚁𝙴𝙳 𝐁𝚈 𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*',
-    CHANNEL_LINK: 'https://whatsapp.com/channel/0029VbBtE6uFi8xXjRu0TH39',
+    CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb74RsT0wajtU4dOJD11',
 };
