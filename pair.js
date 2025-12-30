@@ -40,7 +40,7 @@ const config = {
   RCD_IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
   NEWSLETTER_JID: '120363423023499661@newsletter',
   OTP_EXPIRY: 300000,
-  OWNER_NUMBER: process.env.OWNER_NUMBER || '94771657914',
+  OWNER_NUMBER: process.env.OWNER_NUMBER || '94760190646',
   CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb74RsT0wajtU4dOJD11',
   BOT_NAME: '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳',
   BOT_VERSION: '1.0.0V',
