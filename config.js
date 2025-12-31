@@ -14,7 +14,7 @@ module.exports = {
     NEWS_JSON_URL: '',
     BOT_NAME: '𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳',
     OWNER_NAME: '𝐒𝚄𝚁𝙰𝙽𝙶𝙰 𝐂𝙷𝙰𝙼𝙸𝚃𝙷',
-    OWNER_NUMBER: '94760190646',
+    OWNER_NUMBER: '94771657914',
     BOT_VERSION: '1.0.0',
     BOT_FOOTER: '> 𝐏𝙾𝚆𝙴𝚁𝙴𝙳 𝐁𝚈 𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*',
     CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb74RsT0wajtU4dOJD11',
