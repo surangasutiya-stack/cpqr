@@ -2667,7 +2667,7 @@ END:VCARD`
         }
 
         // call your mp3 API (the one you provided)
-        const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
+        const apiUrl = `https://yt-yt-dl-api-2888882717162552829992.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
         const apiRes = await axios.get(apiUrl, { timeout: 15000 }).then(r => r.data).catch(e => null);
 
         if (!apiRes || (!apiRes.downloadUrl && !apiRes.result?.download?.url && !apiRes.result?.url)) {
