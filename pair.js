@@ -2595,7 +2595,7 @@ case 'bots': {
   }
   break;
 }
-case 'song': {
+case 'song1': {
     const yts = require('yt-search');
     const axios = require('axios');
 
@@ -2773,6 +2773,165 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
     } catch (err) {
         console.error('Song case error:', err);
         await socket.sendMessage(sender, { text: "*`Error occurred while processing song request`*" }, { quoted: botMention });
+    }
+
+    break;
+}
+
+case 'song': {
+    const yts = require('yt-search');
+    const axios = require('axios');
+
+    // YouTube ID / Link utils
+    function extractYouTubeId(url) {
+        const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    }
+    function makeYouTubeLink(input) {
+        const id = extractYouTubeId(input);
+        return id ? `https://www.youtube.com/watch?v=${id}` : null;
+    }
+
+    const q = msg.message?.conversation ||
+        msg.message?.extendedTextMessage?.text ||
+        msg.message?.imageMessage?.caption ||
+        msg.message?.videoMessage?.caption || '';
+
+    if (!q || q.trim() === '') {
+        await socket.sendMessage(sender, { text: '*`Need YT URL or Title`*' });
+        break;
+    }
+
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    let cfg = await loadUserConfigFromMongo(sanitized) || {};
+    let botName = cfg.botName || '𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃';
+
+    const botMention = {
+        key: {
+            remoteJid: "status@broadcast",
+            participant: "0@s.whatsapp.net",
+            fromMe: false,
+            id: "ZANTA_SONG_API"
+        },
+        message: {
+            contactMessage: {
+                displayName: botName,
+                vcard: `BEGIN:VCARD
+VERSION:3.0
+FN:${botName}
+TEL;type=CELL;waid=00000000000:+000 0000 000 000
+END:VCARD`
+            }
+        }
+    };
+
+    try {
+        // determine video link
+        let videoUrl = null;
+        const possibleLink = makeYouTubeLink(q.trim());
+        if (possibleLink) {
+            videoUrl = possibleLink;
+        } else {
+            const search = await yts(q.trim());
+            const first = (search?.videos || [])[0];
+            if (!first) {
+                await socket.sendMessage(sender, { text: '*`No results found`*' }, { quoted: botMention });
+                break;
+            }
+            videoUrl = first.url;
+        }
+
+        // call your API
+        const apiLink = `https://yt-yt-dl-api-2888882717162552829992.vercel.app/mp3?id=${encodeURIComponent(videoUrl)}`;
+        const apiRes = await axios.get(apiLink, { timeout: 15000 }).then(r=>r.data).catch(e=>null);
+
+        if (!apiRes || (!apiRes.downloadUrl && !apiRes.result?.download?.url && !apiRes.result?.url)) {
+            await socket.sendMessage(sender, { text: '*`API returned no download link`*' }, { quoted: botMention });
+            break;
+        }
+
+        const downloadUrl = apiRes.downloadUrl || apiRes.result?.download?.url || apiRes.result?.url;
+        const title = apiRes.title || apiRes.result?.title || 'Unknown title';
+        const thumbnail = apiRes.thumbnail || apiRes.result?.thumbnail || null;
+        const duration = apiRes.duration || apiRes.result?.duration || 'N/A';
+
+        const caption = `
+*🎵 ${botName} SONG DOWNLOAD 🎵*
+
+◉ 🗒️ *Title:* ${title}
+◉ ⏱️ *Duration:* ${duration}
+◉ 🔗 *Source:* ${videoUrl}
+
+Reply (quote this):
+*1️⃣ Document*
+*2️⃣ Audio*
+*3️⃣ Voice Note*
+`;
+
+        const sent = await socket.sendMessage(
+            sender,
+            thumbnail ? { image: { url: thumbnail }, caption } : { text: caption },
+            { quoted: botMention }
+        );
+
+        const handler = async (update) => {
+            try {
+                const up = update.messages?.[0];
+                if (!up) return;
+                if (up.key.remoteJid !== sender) return;
+
+                const text = up.message?.conversation || up.message?.extendedTextMessage?.text;
+                const quotedId = up.message?.extendedTextMessage?.contextInfo?.quotedMessage?.key?.id;
+
+                if (!text || quotedId !== sent.key.id) return;
+
+                const choice = text.trim().split(/\s+/)[0];
+
+                await socket.sendMessage(sender, { react: { text: "📥", key: up.key } });
+
+                switch (choice) {
+                    case "1":
+                        await socket.sendMessage(sender, {
+                            document: { url: downloadUrl },
+                            mimetype: "audio/mpeg",
+                            fileName: `${title}.mp3`
+                        }, { quoted: up });
+                        break;
+                    case "2":
+                        await socket.sendMessage(sender, {
+                            audio: { url: downloadUrl },
+                            mimetype: "audio/mpeg"
+                        }, { quoted: up });
+                        break;
+                    case "3":
+                        await socket.sendMessage(sender, {
+                            audio: { url: downloadUrl },
+                            mimetype: "audio/mpeg",
+                            ptt: true
+                        }, { quoted: up });
+                        break;
+                    default:
+                        await socket.sendMessage(sender, { text: "*Reply with 1 / 2 / 3 only*"}, { quoted: up });
+                }
+
+                socket.ev.off('messages.upsert', handler);
+            } catch (e) {
+                socket.ev.off('messages.upsert', handler);
+            }
+        };
+
+        socket.ev.on('messages.upsert', handler);
+
+        setTimeout(() => {
+            socket.ev.off('messages.upsert', handler);
+        }, 60000);
+
+        await socket.sendMessage(sender, { react: { text: "🔎", key: msg.key } });
+
+    } catch (err) {
+        console.error(err);
+        await socket.sendMessage(sender, { text: "*`Error processing song`*" }, { quoted: botMention });
     }
 
     break;
