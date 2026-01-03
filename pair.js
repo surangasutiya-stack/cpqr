@@ -2595,7 +2595,7 @@ case 'bots': {
   }
   break;
 }
-case 'song1': {
+case 'song': {
     const yts = require('yt-search');
     const axios = require('axios');
 
@@ -2778,7 +2778,7 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
     break;
 }
 
-case 'song': {
+case 'so': {
     const yts = require('yt-search');
     const axios = require('axios');
 
@@ -2970,7 +2970,7 @@ case 'csend': {
     const ytUrl = video.url;
 
     const axios = require("axios");
-    const apiUrl = `https://chama-yt-dl-api.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
+    const apiUrl = `https://yt-yt-dl-api-2888882717162552829992.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
     const { data } = await axios.get(apiUrl);
 
     if (!data?.downloadUrl) {
