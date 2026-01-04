@@ -3214,76 +3214,162 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
 
 case 'menu': {
   try {
-    // =========================
-    // CONFIG
-    // =========================
-    const BOT_NAME = '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
-    const LOGO_URL = 'https://files.catbox.moe/9osizy.jpg';
-    const VIDEO_URL = 'https://files.catbox.moe/your_video.mp4'; // normal mp4
-    const MP3_URL = 'https://files.catbox.moe/e1umjr.mpeg';
-
-    // =========================
-    // 1️⃣ SEND VIDEO (FIRST)
-    // =========================
+    // React
     await socket.sendMessage(sender, {
-      video: { url: VIDEO_URL }
-    }, { quoted: msg });
+      react: { text: "🗒️", key: msg.key }
+    });
+  } catch {}
 
-    // =========================
-    // 2️⃣ SEND MENU (AFTER 1.5s)
-    // =========================
-    setTimeout(async () => {
-      await socket.sendMessage(sender, {
-        image: { url: LOGO_URL },
-        caption: `
-*HI 👋 MINI BOT USER 💗*
+  try {
+    /* ===============================
+       1️⃣ SEND MENU VIDEO NOTE FIRST
+       =============================== */
+    try {
+      await socket.sendMessage(
+        sender,
+        {
+          video: {
+            url: 'https://github.com/Chamijd/KHAN-DATA/raw/refs/heads/main/logo/VID-20250508-WA0031(1).mp4'
+          },
+          mimetype: 'video/mp4',
+          ptv: true // 🔴 Video Note
+        },
+        { quoted: msg }
+      );
+    } catch (e) {
+      console.log('Menu video failed, continue menu:', e);
+    }
 
-*Bot :* ${BOT_NAME}
-*Owner :* ${config.OWNER_NAME || 'Hirun Vikasitha'}
-*Version :* ${config.BOT_VERSION || '0.0001+'}
+    // Small delay for smooth UX
+    await new Promise(r => setTimeout(r, 1200));
 
-*📥 Download*
-*🎨 Creative*
-*🛠️ Tools*
-*⚙️ Settings*
-*🥷 Owner*
-`.trim(),
+    /* ===============================
+       2️⃣ MENU DATA
+       =============================== */
+
+    const startTime = socketCreationTime.get(number) || Date.now();
+    const uptimeSec = Math.floor((Date.now() - startTime) / 1000);
+    const hours = Math.floor(uptimeSec / 3600);
+    const minutes = Math.floor((uptimeSec % 3600) / 60);
+    const seconds = Math.floor(uptimeSec % 60);
+
+    // Load user config
+    let userCfg = {};
+    try {
+      if (number && typeof loadUserConfigFromMongo === 'function') {
+        userCfg = await loadUserConfigFromMongo(number.replace(/[^0-9]/g, '')) || {};
+      }
+    } catch {
+      userCfg = {};
+    }
+
+    const titleRaw = userCfg.botName || 'ℂℍ𝔸𝕄𝔸 𝕄𝕀ℕ𝕀 𝔹𝕆𝕋 𝕍3';
+
+    const invoker =
+      msg?.pushName ||
+      msg?.key?.participant?.split('@')[0] ||
+      sender.split('@')[0];
+
+    const greeting = () => {
+      const h = new Date().getHours();
+      if (h >= 5 && h < 12) return "🌅 *Good Morning!*";
+      if (h >= 12 && h < 18) return "🌞 *Good Afternoon!*";
+      return "🌙 *Good Night!*";
+    };
+
+    const ramUsed = (process.memoryUsage().rss / 1024 / 1024).toFixed(0);
+    const ramTotal = 330;
+
+    /* ===============================
+       3️⃣ FAKE QUOTED CONTACT
+       =============================== */
+    const quotedContact = {
+      key: {
+        remoteJid: "status@broadcast",
+        participant: "0@s.whatsapp.net",
+        fromMe: false,
+        id: "MENU_FAKE_CONTACT"
+      },
+      message: {
+        contactMessage: {
+          displayName: titleRaw,
+          vcard:
+`BEGIN:VCARD
+VERSION:3.0
+FN:${titleRaw}
+ORG:Meta Platforms
+TEL;waid=13135550002:+1 313 555 0002
+END:VCARD`
+        }
+      }
+    };
+
+    /* ===============================
+       4️⃣ MENU TEXT
+       =============================== */
+    const menuText = `
+🎀 *ℂℍ𝔸𝕄𝔸 𝕄𝕀ℕ𝕀 𝔹𝕆𝕋 𝕍3* 🎀
+
+${greeting()} *${invoker}*
+
+*╭─「 𝗕𝗢𝗧 𝗜𝗡𝗙𝗢 」*
+*│* 🤖 *Bot:* ${titleRaw}
+*│* 👤 *User:* ${invoker}
+*│* 👑 *Owner:* Mr Chamindu
+*│* ⏰ *Uptime:* ${hours}h ${minutes}m ${seconds}s
+*│* 📂 *RAM:* ${ramUsed}MB / ${ramTotal}MB
+*│* 🎐 *Prefix:* ${config.PREFIX}
+*╰───────────────*
+
+> © Powered by Mr Chamindu
+`;
+
+    /* ===============================
+       5️⃣ IMAGE LOAD
+       =============================== */
+    const defaultImg = 'https://i.ibb.co/gFbrJR2v/IMG-20251213-WA0071.png';
+    let imagePayload;
+
+    try {
+      const logo = userCfg.logo || defaultImg;
+      imagePayload = logo.startsWith('http')
+        ? { url: logo }
+        : fs.readFileSync(logo);
+    } catch {
+      imagePayload = { url: defaultImg };
+    }
+
+    /* ===============================
+       6️⃣ SEND IMAGE + BUTTON MENU
+       =============================== */
+    await socket.sendMessage(
+      sender,
+      {
+        image: imagePayload,
+        caption: menuText,
+        footer: titleRaw,
         buttons: [
           { buttonId: `${config.PREFIX}download`, buttonText: { displayText: "📥 DOWNLOAD" }, type: 1 },
           { buttonId: `${config.PREFIX}creative`, buttonText: { displayText: "🎨 CREATIVE" }, type: 1 },
-          { buttonId: `${config.PREFIX}tools`, buttonText: { displayText: "🛠️ TOOLS" }, type: 1 },
-          { buttonId: `${config.PREFIX}settings`, buttonText: { displayText: "⚙️ SETTINGS" }, type: 1 },
-          { buttonId: `${config.PREFIX}owner`, buttonText: { displayText: "🥷 OWNER" }, type: 1 }
+          { buttonId: `${config.PREFIX}tools`, buttonText: { displayText: "🛠 UTILITIES" }, type: 1 },
+          { buttonId: `${config.PREFIX}settings`, buttonText: { displayText: "⚙ SETTINGS" }, type: 1 },
+          { buttonId: `${config.PREFIX}owner`, buttonText: { displayText: "👑 OWNER" }, type: 1 }
         ],
-        headerType: 4
-      }, { quoted: msg });
-    }, 1500);
-
-    // =========================
-    // 3️⃣ SEND MP3 (AFTER 3s)
-    // =========================
-    setTimeout(async () => {
-      await socket.sendMessage(sender, {
-        audio: { url: MP3_URL },
-        mimetype: 'audio/mpeg',
-        ptt: false,
-        contextInfo: {
-          externalAdReply: {
-            title: BOT_NAME,
-            body: 'ZANTA X MD MINI BOT',
-            thumbnailUrl: LOGO_URL,
-            mediaType: 1,
-            renderLargerThumbnail: true
-          }
-        }
-      }, { quoted: msg });
-    }, 3000);
+        viewOnce: true
+      },
+      { quoted: quotedContact }
+    );
 
   } catch (err) {
-    console.error('MENU ERROR:', err);
+    console.error('menu command error:', err);
+    await socket.sendMessage(
+      sender,
+      { text: '❌ Menu load failed.' },
+      { quoted: msg }
+    );
   }
-  break;
 }
+break;
 // ==================== DOWNLOAD MENU ====================
 case 'download': {
   try { await socket.sendMessage(sender, { react: { text: "📥", key: msg.key } }); } catch(e){}
