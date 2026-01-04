@@ -3325,7 +3325,7 @@ ${greeting()} *${invoker}*
     /* ===============================
        5️⃣ IMAGE LOAD
        =============================== */
-    const defaultImg = 'https://i.ibb.co/gFbrJR2v/IMG-20251213-WA0071.png';
+    const defaultImg = 'https://files.catbox.moe/9osizy.jpg';
     let imagePayload;
 
     try {
