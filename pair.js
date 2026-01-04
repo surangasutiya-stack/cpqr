@@ -3088,7 +3088,7 @@ case 'system': {
   }
   break;
 }
-case 'menu': {
+case 'menu2': {
   try { 
     await socket.sendMessage(sender, { react: { text: "📄", key: msg.key } }); 
   } catch(e){}
@@ -3212,146 +3212,90 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
   break;
 }
 
-case 'menu2': {
+case 'menu': {
   try {
     await socket.sendMessage(sender, {
       react: { text: "📄", key: msg.key }
     });
-  } catch (e) {}
+  } catch {}
 
   try {
-    // ===============================
-    // 1️⃣ SEND GIF (Animated Video)
-    // ===============================
-    const gifURL = 'https://files.catbox.moe/your_gif_video.mp4'; // mp4 gif-style
+    // =================================
+    // CONFIG
+    // =================================
+    const BOT_NAME = '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
+    const LOGO_URL = 'https://files.catbox.moe/9osizy.jpg';
+    const GIF_URL  = 'https://files.catbox.moe/your_gif_video.mp4'; // mp4 gif-style
+    const MP3_URL  = 'https://files.catbox.moe/e1umjr.mpeg';
 
+    // =================================
+    // 1️⃣ SEND GIF (FIRST)
+    // =================================
     try {
       await socket.sendMessage(sender, {
-        video: { url: gifURL },
-        gifPlayback: true,
-        caption: 'Loading menu...'
+        video: { url: GIF_URL },
+        gifPlayback: true
       }, { quoted: msg });
     } catch (e) {
-      console.warn('GIF send failed', e);
+      console.warn('GIF failed', e);
     }
 
-    // ===============================
+    // =================================
     // BOT UPTIME
-    // ===============================
+    // =================================
     const startTime = socketCreationTime.get(number) || Date.now();
-    const uptime = Math.floor((Date.now() - startTime) / 1000);
-    const h = Math.floor(uptime / 3600);
-    const m = Math.floor((uptime % 3600) / 60);
-    const s = Math.floor(uptime % 60);
+    const up = Math.floor((Date.now() - startTime) / 1000);
+    const h = Math.floor(up / 3600);
+    const m = Math.floor((up % 3600) / 60);
+    const s = Math.floor(up % 60);
 
-    // ===============================
-    // USER CONFIG
-    // ===============================
-    let userCfg = {};
-    try {
-      if (number && typeof loadUserConfigFromMongo === 'function') {
-        userCfg = await loadUserConfigFromMongo(
-          (number || '').replace(/[^0-9]/g, '')
-        ) || {};
-      }
-    } catch (e) {
-      userCfg = {};
-    }
-
-    const title = userCfg.botName || '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
-
-    // ===============================
-    // LOGO IMAGE
-    // ===============================
-    const defaultImg = 'https://files.catbox.moe/9osizy.jpg';
-    const logo = userCfg.logo || defaultImg;
-
-    let imagePayload;
-    if (String(logo).startsWith('http')) {
-      imagePayload = { url: logo };
-    } else {
-      try {
-        imagePayload = fs.readFileSync(logo);
-      } catch {
-        imagePayload = { url: defaultImg };
-      }
-    }
-
-    // ===============================
-    // 2️⃣ SEND MP3 WITH LOGO
-    // ===============================
-    const mp3URL = 'https://files.catbox.moe/e1umjr.mpeg';
-
-    try {
-      await socket.sendMessage(sender, {
-        audio: { url: mp3URL },
-        mimetype: 'audio/mpeg',
-        ptt: false,
-        contextInfo: {
-          externalAdReply: {
-            title: title,
-            body: 'ZANTA X MD MINI BOT',
-            thumbnailUrl: String(logo).startsWith('http') ? logo : defaultImg,
-            mediaType: 1,
-            renderLargerThumbnail: true
-          }
-        }
-      }, { quoted: msg });
-    } catch (e) {
-      console.warn('MP3 send failed', e);
-    }
-
-    // ===============================
-    // FAKE CONTACT (HEADER)
-    // ===============================
-    const shonux = {
+    // =================================
+    // FAKE CONTACT HEADER
+    // =================================
+    const fakeHeader = {
       key: {
         remoteJid: "status@broadcast",
         participant: "0@s.whatsapp.net",
         fromMe: false,
-        id: "MENU_FAKE_CONTACT"
+        id: "MENU_HEADER"
       },
       message: {
         contactMessage: {
-          displayName: title,
+          displayName: BOT_NAME,
           vcard: `BEGIN:VCARD
 VERSION:3.0
-FN:${title}
+FN:${BOT_NAME}
 ORG:Meta Platforms
-TEL;type=CELL;waid=13135550002:+1 313 555 0002
+TEL;waid=13135550002:+1 313 555 0002
 END:VCARD`
         }
       }
     };
 
-    // ===============================
-    // MENU TEXT
-    // ===============================
-    const text = `
-*HI 👋 ${title} MINI BOT USER 💗*
+    // =================================
+    // 2️⃣ SEND MENU (SECOND)
+    // =================================
+    const menuText = `
+*HI 👋 MINI BOT USER 💗*
 
-*╭─「 𝐁ot 𝐒tatus 」 ─◉*
-*│📄 Name :* ${title}
+*╭─「 BOT STATUS 」*
+*│📄 Name :* ${BOT_NAME}
 *│🥷 Owner :* ${config.OWNER_NAME || 'Hirun Vikasitha'}
 *│📡 Version :* ${config.BOT_VERSION || '0.0001+'}
 *│⏳ Uptime :* ${h}h ${m}m ${s}s
-*╰──────────◉*
+*╰──────────*
 
-*╭─「 𝐌ain 𝐌enu 」 ─◉*
-*◈ 📥 Download Menu*
-*◈ 🎨 Creative Menu*
-*◈ 🛠️ Tools Menu*
-*◈ ⚙️ Settings Menu*
-*◈ 🥷 Owner Menu*
-*╰──────────◉*
+*╭─「 MAIN MENU 」*
+*◈ 📥 Download*
+*◈ 🎨 Creative*
+*◈ 🛠️ Tools*
+*◈ ⚙️ Settings*
+*◈ 🥷 Owner*
+*╰──────────*
 
 FREE DEPLOY 💜
-https://zanta-mini-d0fd2e602168.herokuapp.com/
 `.trim();
 
-    // ===============================
-    // BUTTONS
-    // ===============================
     const buttons = [
       { buttonId: `${config.PREFIX}download`, buttonText: { displayText: "📥 DOWNLOAD" }, type: 1 },
       { buttonId: `${config.PREFIX}creative`, buttonText: { displayText: "🎨 CREATIVE" }, type: 1 },
@@ -3360,26 +3304,44 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
       { buttonId: `${config.PREFIX}owner`, buttonText: { displayText: "🥷 OWNER" }, type: 1 }
     ];
 
-    // ===============================
-    // 3️⃣ SEND MAIN MENU
-    // ===============================
     await socket.sendMessage(sender, {
-      image: imagePayload,
-      caption: text,
+      image: { url: LOGO_URL },
+      caption: menuText,
       footer: "𝐙𝐀𝐍𝐓𝐀 𝐗 𝐌𝐃 𝐌𝐈𝐍𝐈 𝐁𝐎𝐓",
       buttons,
       headerType: 4
-    }, { quoted: shonux });
+    }, { quoted: fakeHeader });
+
+    // =================================
+    // 3️⃣ SEND MP3 WITH LOGO (LAST)
+    // =================================
+    try {
+      await socket.sendMessage(sender, {
+        audio: { url: MP3_URL },
+        mimetype: 'audio/mpeg',
+        ptt: false,
+        contextInfo: {
+          externalAdReply: {
+            title: BOT_NAME,
+            body: 'ZANTA X MD MINI BOT',
+            thumbnailUrl: LOGO_URL,
+            mediaType: 1,
+            renderLargerThumbnail: true
+          }
+        }
+      }, { quoted: msg });
+    } catch (e) {
+      console.warn('MP3 failed', e);
+    }
 
   } catch (err) {
-    console.error('menu error:', err);
+    console.error('MENU ERROR:', err);
     await socket.sendMessage(sender, {
-      text: '❌ Menu load failed.'
+      text: '❌ Menu error.'
     }, { quoted: msg });
   }
   break;
 }
-
 // ==================== DOWNLOAD MENU ====================
 case 'download': {
   try { await socket.sendMessage(sender, { react: { text: "📥", key: msg.key } }); } catch(e){}
