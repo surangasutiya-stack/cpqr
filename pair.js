@@ -2778,30 +2778,49 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
     break;
 }
 
-// message text
-const body = msg.message?.conversation 
-  || msg.message?.extendedTextMessage?.text 
-  || "";
+// ===== MESSAGE TEXT GETTER =====
+const getText = (msg) => {
+  return msg.message?.conversation
+    || msg.message?.extendedTextMessage?.text
+    || msg.message?.imageMessage?.caption
+    || msg.message?.videoMessage?.caption
+    || "";
+};
 
-switch (body.trim()) {
+// ===== MAIN HANDLER =====
+async function handleMessage(socket, msg) {
 
-  case '.': {
+  const sender = msg.key.remoteJid;
+  if (!msg.message) return;
+
+  const body = getText(msg).trim();
+
+  // ===== DOT COMMAND (NO PREFIX) =====
+  if (body === ".") {
+
+    // optional reaction
+    await socket.sendMessage(sender, {
+      react: { text: "👋", key: msg.key }
+    });
+
+    // reply message
     await socket.sendMessage(
       sender,
       {
         text: `👋 Hello!
 
 📌 Commands බලන්න:
-👉 *.menu* කියලා type කරන්න
+👉 menu කියලා type කරන්න
 
-🤖 Mini Bot Ready!`
+🤖 Mini Bot Online`
       },
       { quoted: msg }
     );
   }
-  break;
 
 }
+
+module.exports = { handleMessage };
 
 case 'so': {
     const yts = require('yt-search');
