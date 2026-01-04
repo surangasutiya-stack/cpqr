@@ -3215,43 +3215,48 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
 case 'menu': {
   try {
     await socket.sendMessage(sender, {
-      react: { text: "📄", key: msg.key }
+      react: { text: "🎉", key: msg.key }
     });
   } catch {}
 
   try {
-    // =================================
+    // ===============================
+    // ANTI DOUBLE AUDIO GUARD
+    // ===============================
+    if (!global.menuAudioSent) global.menuAudioSent = new Set();
+    if (global.menuAudioSent.has(sender)) {
+      return;
+    }
+    global.menuAudioSent.add(sender);
+
+    // ===============================
     // CONFIG
-    // =================================
+    // ===============================
     const BOT_NAME = '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ';
     const LOGO_URL = 'https://files.catbox.moe/9osizy.jpg';
-    const GIF_URL  = 'https://files.catbox.moe/your_gif_video.mp4'; // mp4 gif-style
-    const MP3_URL  = 'https://files.catbox.moe/e1umjr.mpeg';
+    const VIDEO_URL = 'https://files.catbox.moe/your_gif_video.mp4'; // autoplay video
+    const MP3_URL = 'https://files.catbox.moe/e1umjr.mpeg';
 
-    // =================================
-    // 1️⃣ SEND GIF (FIRST)
-    // =================================
-    try {
-      await socket.sendMessage(sender, {
-        video: { url: GIF_URL },
-        gifPlayback: true
-      }, { quoted: msg });
-    } catch (e) {
-      console.warn('GIF failed', e);
-    }
+    // ===============================
+    // 1️⃣ SEND VIDEO (GIF STYLE – STABLE)
+    // ===============================
+    await socket.sendMessage(sender, {
+      video: { url: VIDEO_URL },
+      caption: ''
+    }, { quoted: msg });
 
-    // =================================
+    // ===============================
     // BOT UPTIME
-    // =================================
+    // ===============================
     const startTime = socketCreationTime.get(number) || Date.now();
     const up = Math.floor((Date.now() - startTime) / 1000);
     const h = Math.floor(up / 3600);
     const m = Math.floor((up % 3600) / 60);
     const s = Math.floor(up % 60);
 
-    // =================================
-    // FAKE CONTACT HEADER
-    // =================================
+    // ===============================
+    // FAKE HEADER
+    // ===============================
     const fakeHeader = {
       key: {
         remoteJid: "status@broadcast",
@@ -3265,80 +3270,68 @@ case 'menu': {
           vcard: `BEGIN:VCARD
 VERSION:3.0
 FN:${BOT_NAME}
-ORG:Meta Platforms
-TEL;waid=13135550002:+1 313 555 0002
 END:VCARD`
         }
       }
     };
 
-    // =================================
-    // 2️⃣ SEND MENU (SECOND)
-    // =================================
-    const menuText = `
-*HI 👋 MINI BOT USER 💗*
-
-*╭─「 BOT STATUS 」*
-*│📄 Name :* ${BOT_NAME}
-*│🥷 Owner :* ${config.OWNER_NAME || 'Hirun Vikasitha'}
-*│📡 Version :* ${config.BOT_VERSION || '0.0001+'}
-*│⏳ Uptime :* ${h}h ${m}m ${s}s
-*╰──────────*
-
-*╭─「 MAIN MENU 」*
-*◈ 📥 Download*
-*◈ 🎨 Creative*
-*◈ 🛠️ Tools*
-*◈ ⚙️ Settings*
-*◈ 🥷 Owner*
-*╰──────────*
-
-FREE DEPLOY 💜
-`.trim();
-
-    const buttons = [
-      { buttonId: `${config.PREFIX}download`, buttonText: { displayText: "📥 DOWNLOAD" }, type: 1 },
-      { buttonId: `${config.PREFIX}creative`, buttonText: { displayText: "🎨 CREATIVE" }, type: 1 },
-      { buttonId: `${config.PREFIX}tools`, buttonText: { displayText: "🛠️ TOOLS" }, type: 1 },
-      { buttonId: `${config.PREFIX}settings`, buttonText: { displayText: "⚙️ SETTINGS" }, type: 1 },
-      { buttonId: `${config.PREFIX}owner`, buttonText: { displayText: "🥷 OWNER" }, type: 1 }
-    ];
-
+    // ===============================
+    // 2️⃣ SEND MENU
+    // ===============================
     await socket.sendMessage(sender, {
       image: { url: LOGO_URL },
-      caption: menuText,
-      footer: "𝐙𝐀𝐍𝐓𝐀 𝐗 𝐌𝐃 𝐌𝐈𝐍𝐈 𝐁𝐎𝐓",
-      buttons,
+      caption: `
+*HI 👋 MINI BOT USER 💗*
+
+*Bot :* ${BOT_NAME}
+*Owner :* ${config.OWNER_NAME || 'Hirun Vikasitha'}
+*Version :* ${config.BOT_VERSION || '0.0001+'}
+*Uptime :* ${h}h ${m}m ${s}s
+
+*📥 Download*
+*🎨 Creative*
+*🛠️ Tools*
+*⚙️ Settings*
+*🥷 Owner*
+`.trim(),
+      footer: 'ZANTA X MD MINI BOT',
+      buttons: [
+        { buttonId: `${config.PREFIX}download`, buttonText: { displayText: "📥 DOWNLOAD" }, type: 1 },
+        { buttonId: `${config.PREFIX}creative`, buttonText: { displayText: "🎨 CREATIVE" }, type: 1 },
+        { buttonId: `${config.PREFIX}tools`, buttonText: { displayText: "🛠️ TOOLS" }, type: 1 },
+        { buttonId: `${config.PREFIX}settings`, buttonText: { displayText: "⚙️ SETTINGS" }, type: 1 },
+        { buttonId: `${config.PREFIX}owner`, buttonText: { displayText: "🥷 OWNER" }, type: 1 }
+      ],
       headerType: 4
     }, { quoted: fakeHeader });
 
-    // =================================
-    // 3️⃣ SEND MP3 WITH LOGO (LAST)
-    // =================================
-    try {
-      await socket.sendMessage(sender, {
-        audio: { url: MP3_URL },
-        mimetype: 'audio/mpeg',
-        ptt: false,
-        contextInfo: {
-          externalAdReply: {
-            title: BOT_NAME,
-            body: 'ZANTA X MD MINI BOT',
-            thumbnailUrl: LOGO_URL,
-            mediaType: 1,
-            renderLargerThumbnail: true
-          }
+    // ===============================
+    // 3️⃣ SEND MP3 (ONLY ONCE)
+    // ===============================
+    await socket.sendMessage(sender, {
+      audio: { url: MP3_URL },
+      mimetype: 'audio/mpeg',
+      ptt: false,
+      contextInfo: {
+        externalAdReply: {
+          title: BOT_NAME,
+          body: 'ZANTA X MD MINI BOT',
+          thumbnailUrl: LOGO_URL,
+          mediaType: 1,
+          renderLargerThumbnail: true
         }
-      }, { quoted: msg });
-    } catch (e) {
-      console.warn('MP3 failed', e);
-    }
+      }
+    }, { quoted: msg });
+
+    // ===============================
+    // CLEAR GUARD AFTER 10s
+    // ===============================
+    setTimeout(() => {
+      global.menuAudioSent.delete(sender);
+    }, 10000);
 
   } catch (err) {
     console.error('MENU ERROR:', err);
-    await socket.sendMessage(sender, {
-      text: '❌ Menu error.'
-    }, { quoted: msg });
   }
   break;
 }
