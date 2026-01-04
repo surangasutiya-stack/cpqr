@@ -2778,6 +2778,31 @@ https://zanta-mini-d0fd2e602168.herokuapp.com/
     break;
 }
 
+// message text
+const body = msg.message?.conversation 
+  || msg.message?.extendedTextMessage?.text 
+  || "";
+
+switch (body.trim()) {
+
+  case '.': {
+    await socket.sendMessage(
+      sender,
+      {
+        text: `👋 Hello!
+
+📌 Commands බලන්න:
+👉 *.menu* කියලා type කරන්න
+
+🤖 Mini Bot Ready!`
+      },
+      { quoted: msg }
+    );
+  }
+  break;
+
+}
+
 case 'so': {
     const yts = require('yt-search');
     const axios = require('axios');
