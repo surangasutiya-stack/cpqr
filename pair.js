@@ -3229,7 +3229,7 @@ case 'menu': {
         sender,
         {
           video: {
-            url: 'https://github.com/Chamijd/KHAN-DATA/raw/refs/heads/main/logo/VID-20250508-WA0031(1).mp4'
+            url: 'https://files.catbox.moe/lyhgm4.mp4'
           },
           mimetype: 'video/mp4',
           ptv: true // 🔴 Video Note
@@ -3263,7 +3263,7 @@ case 'menu': {
       userCfg = {};
     }
 
-    const titleRaw = userCfg.botName || 'ℂℍ𝔸𝕄𝔸 𝕄𝕀ℕ𝕀 𝔹𝕆𝕋 𝕍3';
+    const titleRaw = userCfg.botName || 'ＺＡＮＴＡ ＭＩＮＩ ＯＦＣ';
 
     const invoker =
       msg?.pushName ||
@@ -3321,7 +3321,7 @@ ${greeting()} *${invoker}*
 *│* 🎐 *Prefix:* ${config.PREFIX}
 *╰───────────────*
 
-> © Powered by Mr Chamindu
+> © Powered by Mr Suranga
 `;
 
     /* ===============================
