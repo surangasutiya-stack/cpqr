@@ -801,7 +801,82 @@ case 'setting': {
   }
   break;
 }
+case 'settings2':
+case 'setting2': {
+try {
 
+const sections = [
+{
+title: '🌍 WORK TYPE',
+rows: [
+{ title: 'Public Mode', description: 'Bot works everywhere', rowId: '.wtype public' },
+{ title: 'Groups Only', description: 'Bot works in groups only', rowId: '.wtype groups' },
+{ title: 'Inbox Only', description: 'Bot works in inbox only', rowId: '.wtype inbox' },
+{ title: 'Private Mode', description: 'Owner only mode', rowId: '.wtype private' }
+]
+},
+{
+title: '⌨️ AUTO TYPING',
+rows: [
+{ title: 'Auto Typing ON', rowId: '.autotyping on' },
+{ title: 'Auto Typing OFF', rowId: '.autotyping off' }
+]
+},
+{
+title: '🎤 AUTO RECORDING',
+rows: [
+{ title: 'Auto Recording ON', rowId: '.autorecording on' },
+{ title: 'Auto Recording OFF', rowId: '.autorecording off' }
+]
+},
+{
+title: '🟢 BOT PRESENCE',
+rows: [
+{ title: 'Always Online ON', rowId: '.botpresence online' },
+{ title: 'Always Online OFF', rowId: '.botpresence offline' }
+]
+},
+{
+title: '👁️ STATUS SETTINGS',
+rows: [
+{ title: 'Status Seen ON', rowId: '.rstatus on' },
+{ title: 'Status Seen OFF', rowId: '.rstatus off' },
+{ title: 'Status React ON', rowId: '.arm on' },
+{ title: 'Status React OFF', rowId: '.arm off' }
+]
+},
+{
+title: '📞 CALL SETTINGS',
+rows: [
+{ title: 'Auto Reject Call ON', rowId: '.creject on' },
+{ title: 'Auto Reject Call OFF', rowId: '.creject off' }
+]
+},
+{
+title: '📖 MESSAGE READ',
+rows: [
+{ title: 'Read All Messages', rowId: '.mread all' },
+{ title: 'Read Commands Only', rowId: '.mread cmd' },
+{ title: 'Don’t Read Messages', rowId: '.mread off' }
+]
+}
+];
+
+const listMessage = {
+text: '⚙️ *ZANTA X MD SETTINGS* ⚙️\n\nSelect an option below 👇',
+footer: 'ZANTA X MD • Settings Panel',
+title: 'BOT SETTINGS',
+buttonText: 'OPEN SETTINGS',
+sections
+};
+
+await sock.sendMessage(from, listMessage, { quoted: m });
+
+} catch (e) {
+console.log(e);
+}
+}
+break;
 case 'wtype': {
   await socket.sendMessage(sender, { react: { text: '🛠️', key: msg.key } });
   try {
