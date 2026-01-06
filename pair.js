@@ -2079,6 +2079,32 @@ case 'gpt': {
   }
   break;
 }
+case 'userreact1': {
+    // Check if args exist
+    if (!args[0] || !args[1]) {
+        return await sock.sendMessage(sender, { text: 'උදාහරණය: .userreact 94771234567, ❤️' });
+    }
+
+    // Get number and reaction
+    let number = args[0].replace(/[^0-9]/g, ''); // number only
+    let reaction = args.slice(1).join(' ');     // emoji
+
+    // WhatsApp JID format
+    let jid = number.includes('@s.whatsapp.net') ? number : number + '@s.whatsapp.net';
+
+    try {
+        await sock.sendMessage(jid, {
+            react: {
+                text: reaction,
+                key: { remoteJid: jid, fromMe: false, id: Date.now().toString() }
+            }
+        });
+        await sock.sendMessage(sender, { text: `✅ ${number} userට "${reaction}" react යවන්න සාර්ථකයි!` });
+    } catch (err) {
+        await sock.sendMessage(sender, { text: `❌ Error: ${err.message}` });
+    }
+}
+break;
  case 'weather':
     try {
         // Messages in English
