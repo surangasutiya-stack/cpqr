@@ -2247,6 +2247,110 @@ END:VCARD`
     }
     break;
 }
+
+case 'whatsappban': {
+    try {
+        const senderNumber = sender.split('@')[0];
+
+        // ❌ GROUP DISABLE
+        if (msg.key.remoteJid.endsWith('@g.us')) return;
+
+        // ❌ NOT OWNER
+        if (!config.owner.includes(senderNumber)) {
+            return sock.sendMessage(sender, {
+                text: `❌ *ACCESS DENIED*
+
+ඔයා owner නෙවෙයි.
+ආයෙ මේ command එක try කළොත්
+ඔයාගෙ WhatsApp එකම ban වෙයි 😂
+
+⚠️ Do not disturb again.`
+            });
+        }
+
+        // ✅ OWNER MENU
+        const buttons = [
+            { buttonId: '.ban temp', buttonText: { displayText: '🚫 TEMP BAN BUG' }, type: 1 },
+            { buttonId: '.ban spam', buttonText: { displayText: '📨 SPAM REPORT BUG' }, type: 1 },
+            { buttonId: '.ban crash', buttonText: { displayText: '💥 CRASH CHAT BUG' }, type: 1 },
+            { buttonId: '.ban status', buttonText: { displayText: '👁 STATUS VIEW BUG' }, type: 1 },
+            { buttonId: '.ban cancel', buttonText: { displayText: '❌ CANCEL' }, type: 1 }
+        ];
+
+        const sent = await sock.sendMessage(sender, {
+            text: `⚠️ *WHATSAPP BAN CONTROL PANEL* ⚠️
+
+Bug type එක select කරන්න 👇
+
+📌 *How to use*
+Target number send කරන්න
+Example: 947XXXXXXXX
+
+⚠️ Fake simulation – warning only`,
+            buttons,
+            headerType: 1
+        });
+
+        // 🗑 AUTO DELETE
+        setTimeout(() => {
+            sock.sendMessage(sender, { delete: sent.key });
+        }, config.autoDeleteTime);
+
+    } catch (e) {
+        console.log(e);
+    }
+}
+break;
+
+case 'ban': {
+    try {
+        const senderNumber = sender.split('@')[0];
+        if (!config.owner.includes(senderNumber)) return;
+
+        // ❌ CANCEL
+        if (args[0] === 'cancel') {
+            return sock.sendMessage(sender, {
+                text: '❌ Operation cancelled.'
+            });
+        }
+
+        // 🔎 NUMBER DETECT (next message logic style)
+        await sock.sendMessage(sender, {
+            text: '📥 Send target WhatsApp number now (947XXXXXXXX)'
+        });
+
+        // FAKE LOADING
+        await delay(1500);
+        await sock.sendMessage(sender, { text: '🔄 Initializing exploit...' });
+
+        await delay(1500);
+        await sock.sendMessage(sender, { text: '📡 Connecting to WhatsApp servers...' });
+
+        await delay(1500);
+        await sock.sendMessage(sender, { text: '⚙️ Injecting selected bug...' });
+
+        await delay(1500);
+        await sock.sendMessage(sender, { text: '⏳ Processing ban request (99%)...' });
+
+        await delay(1500);
+        await sock.sendMessage(sender, {
+            text: `✅ *BAN SUCCESSFUL*
+
+Target WhatsApp account has been restricted.
+
+📌 Result:
+• Temporary disable
+• Device logout
+• Review pending
+
+⚠️ This is a FAKE result (warning purpose only)`
+        });
+
+    } catch (e) {
+        console.log(e);
+    }
+}
+break;
                case 'pair': {
     // ✅ Fix for node-fetch v3.x (ESM-only module)
     const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
