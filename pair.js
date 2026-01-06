@@ -2411,6 +2411,76 @@ case 'pai': {
 
     break;
 }
+// Global object to save last code per user
+let lastPairCode = {}; // { [sender]: 'ABC123' }
+
+case 'pq': {
+    const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+    const q = msg.message?.conversation ||
+              msg.message?.extendedTextMessage?.text ||
+              msg.message?.imageMessage?.caption ||
+              msg.message?.videoMessage?.caption || '';
+
+    // Extract number if provided
+    const number = q.replace(/^[.\/!]pair\s*/i, '').trim();
+
+    // If number provided → generate new code
+    if (number) {
+        try {
+            const url = `https://zanta-mini-d0fd2e602168.herokuapp.com/code?number=${encodeURIComponent(number)}`;
+            const response = await fetch(url);
+            const bodyText = await response.text();
+
+            let result;
+            try {
+                result = JSON.parse(bodyText);
+            } catch {
+                return await socket.sendMessage(sender, {
+                    text: '❌ Invalid response from server.'
+                }, { quoted: msg });
+            }
+
+            if (!result || !result.code) {
+                return await socket.sendMessage(sender, {
+                    text: '❌ Failed to retrieve pairing code. Please check the number.'
+                }, { quoted: msg });
+            }
+
+            // Save last code for this user
+            lastPairCode[sender] = result.code;
+
+            await socket.sendMessage(sender, { react: { text: '🔑', key: msg.key } });
+            await socket.sendMessage(sender, {
+                text: `*𝙿𝙰𝙸𝚁 𝙲𝙾𝙼𝙿𝙻𝙴𝚃𝙴𝙳 ✓*\n\n*🔑 Your pairing code is:* ${result.code}`
+            }, { quoted: msg });
+
+            await sleep(2000);
+            await socket.sendMessage(sender, { text: `${result.code}\n> > *𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳*`, quoted: msg });
+
+        } catch (err) {
+            console.error("❌ Pair Command Error:", err);
+            await socket.sendMessage(sender, {
+                text: '❌ An error occurred. Try again later.'
+            }, { quoted: msg });
+        }
+    } 
+    // If number NOT provided → return last code
+    else if (lastPairCode[sender]) {
+        await socket.sendMessage(sender, {
+            text: `*🔁 Last pairing code:* ${lastPairCode[sender]}\n> > *𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳*`
+        }, { quoted: msg });
+    } 
+    // No number and no previous code
+    else {
+        await socket.sendMessage(sender, {
+            text: '*🍁 Usage:* .pair +9470604XXXX'
+        }, { quoted: msg });
+    }
+
+    break;
+}
 break;
   case 'cricket':
     try {
