@@ -38,7 +38,7 @@ const config = {
   MAX_RETRIES: 3,
   GROUP_INVITE_LINK: 'https://chat.whatsapp.com/GIZV1AIr8qs6D1vK379NOV?mode=hqrc',
   RCD_IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
-  NEWSLETTER_JID: '120363405860789177@g.us',
+  NEWSLETTER_JID: '120363406815968161@g.us',
   OTP_EXPIRY: 300000,
   OWNER_NUMBER: process.env.OWNER_NUMBER || '94753708234',
   CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb74RsT0wajtU4dOJD11',
