@@ -815,7 +815,7 @@ socket.ev.on('messages.upsert', async (m) => {
 
   }
 });
-case 'settin': {
+case 'setting': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
   try {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
@@ -949,7 +949,7 @@ if (msg.listResponseMessage) {
     case '.mread off': await setReadAllMessages('off', sender); break;
   }
 }
-case 'setting': {
+case 'settg': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
   try {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
@@ -2248,46 +2248,7 @@ END:VCARD`
     break;
 }
 
-case 'returnbug': {
-    try {
-        const owner = '94771657914';
-        const senderNum = sender.split('@')[0];
 
-        // ❌ NOT OWNER
-        if (senderNum !== owner) {
-            return sock.sendMessage(sender, {
-                text: `🚫 *උබ owner නෙවෙයි.*
-
-ආයෙ මේ command එක try කළොත්
-*ඔයාගෙ WhatsApp එකම ban වෙයි* 😂
-
-⚠️ *Do not disturb again.*`
-            });
-        }
-
-        // ✅ OWNER MENU
-        const buttons = [
-            { buttonId: '.rb1', buttonText: { displayText: '🐞 Bug 1' }, type: 1 },
-            { buttonId: '.rb2', buttonText: { displayText: '🐞 Bug 2' }, type: 1 },
-            { buttonId: '.rb3', buttonText: { displayText: '🐞 Bug 3' }, type: 1 },
-            { buttonId: '.rb4', buttonText: { displayText: '🐞 Bug 4' }, type: 1 },
-            { buttonId: '.rb5', buttonText: { displayText: '🐞 Bug 5' }, type: 1 }
-        ];
-
-        await sock.sendMessage(sender, {
-            text: `🐞 *RETURN BUG MENU*
-
-Any button you press = DONE ✅`,
-            buttons,
-            headerType: 1
-        });
-
-    } catch (e) {
-        console.log(e);
-    }
-}
-break;
-}
                case 'pair': {
     // ✅ Fix for node-fetch v3.x (ESM-only module)
     const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
