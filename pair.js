@@ -802,6 +802,110 @@ case 'setting': {
   break;
 }
 
+case 'setting1': {
+  await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
+  try {
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    const senderNum = (nowsender || '').split('@')[0];
+    const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+
+    // Permission check
+    if (senderNum !== sanitized && senderNum !== ownerNum) {
+      const shonux = {
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETTING1" },
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      };
+      return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change settings.' }, { quoted: shonux });
+    }
+
+    const currentConfig = await loadUserConfigFromMongo(sanitized) || {};
+    const botName = currentConfig.botName || BOT_NAME_FANCY;
+    const prefix = currentConfig.PREFIX || config.PREFIX;
+
+    // Settings list
+    const settingList = {
+      title: `🔧 ${botName} SETTINGS`,
+      description: "Select an option to update bot settings",
+      buttonText: "⚙️ Configure Settings",
+      listType: 1,
+      sections: [
+        {
+          title: "➤ 𝐖𝙾𝚁𝙺 𝐓𝚈𝙿𝙴",
+          rows: [
+            { title: "𝐏𝚄𝙱𝙻𝙸𝙲", description: "", rowId: ".wtype public" },
+            { title: "𝐎𝙽𝙻𝚈 𝐆𝚁𝙾𝚄𝙿", description: "", rowId: ".wtype groups" },
+            { title: "𝐎𝙽𝙻𝚈 𝐈𝙽𝙱𝙾𝚇", description: "", rowId: ".wtype inbox" },
+            { title: "𝐎𝙽𝙻𝚈 𝐏𝚁𝙸𝚅𝙰𝚃𝙴", description: "", rowId: ".wtype private" }
+          ]
+        },
+        {
+          title: "➤ 𝐅𝙰𝙺𝙴 𝐓𝚈𝙿𝙸𝙽𝙶",
+          rows: [
+            { title: "𝐀𝚄𝚃𝙾 𝐓𝚈𝙿𝙸𝙽𝙶 𝐎𝐍", description: "", rowId: ".autotyping on" },
+            { title: "𝐀𝚄𝚃𝙾 𝐓𝚈𝙿𝙸𝙽𝙶 𝐎𝐅𝐅", description: "", rowId: ".autotyping off" }
+          ]
+        },
+        {
+          title: "➤ 𝐀𝚄𝚃𝙾 𝐑𝙴ᴄᴏʀᴅɪɴɢ",
+          rows: [
+            { title: "𝐀𝚄𝚃𝙾 𝐑ᴇᴄᴏʀᴅɪɴɢ 𝐎𝐍", description: "", rowId: ".autorecording on" },
+            { title: "𝐀𝚄𝚃𝙾 𝐑ᴇᴄᴏʀᴅɪɴɢ 𝐎𝐅𝐅", description: "", rowId: ".autorecording off" }
+          ]
+        }
+        // add other sections as needed
+      ]
+    };
+
+    await socket.sendMessage(sender, {
+      text: "*╭────────────╮*\n*𝐔𝙿𝙳𝙰𝚃𝙴 𝐒𝙴𝚃𝚃𝙸𝙽𝙶 𝐍𝙾𝚃 𝐖𝙰𝚃𝙲𝙷*\n*╰────────────╯*",
+      footer: botName,
+      mentions: [sender],
+      templateButtons: [],
+      sections: settingList.sections,
+      buttonText: settingList.buttonText
+    }, { quoted: msg });
+
+  } catch (e) {
+    console.error("Setting command error:", e);
+    await socket.sendMessage(sender, { text: "*❌ Error loading settings!*" }, { quoted: msg });
+  }
+  break;
+}
+
+// ======== LIST RESPONSE HANDLER ========
+if (msg.listResponseMessage) {
+  const selectedId = msg.listResponseMessage.singleSelectReply.selectedRowId;
+
+  // Run command automatically based on rowId
+  switch (selectedId) {
+    case '.wtype public':
+      await setWorkType('public', sender);
+      break;
+    case '.wtype groups':
+      await setWorkType('groups', sender);
+      break;
+    case '.wtype inbox':
+      await setWorkType('inbox', sender);
+      break;
+    case '.wtype private':
+      await setWorkType('private', sender);
+      break;
+    case '.autotyping on':
+      await setAutoTyping(true, sender);
+      break;
+    case '.autotyping off':
+      await setAutoTyping(false, sender);
+      break;
+    case '.autorecording on':
+      await setAutoRecording(true, sender);
+      break;
+    case '.autorecording off':
+      await setAutoRecording(false, sender);
+      break;
+    // add all other buttons similarly
+  }
+}
+
 case 'wtype': {
   await socket.sendMessage(sender, { react: { text: '🛠️', key: msg.key } });
   try {
