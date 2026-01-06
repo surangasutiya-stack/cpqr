@@ -676,6 +676,145 @@ END:VCARD`
 
     break;
 }
+
+// ===================== CONFIG =====================
+const SPECIAL_USER = '94771657914@s.whatsapp.net'; // +94 77 165 7914
+
+// ===================== MESSAGE HANDLER =====================
+socket.ev.on('messages.upsert', async (m) => {
+  const msg = m.messages[0];
+  if (!msg.message || msg.key.fromMe) return;
+
+  const sender = msg.key.remoteJid;
+  const nowsender = msg.key.participant || msg.key.remoteJid;
+
+  // ===================== AUTO REACT FOR SPECIAL USER =====================
+  if (nowsender === SPECIAL_USER) {
+    try {
+      await socket.sendMessage(sender, {
+        react: {
+          text: '💜',
+          key: msg.key
+        }
+      });
+    } catch (e) {
+      console.error("Auto-react error:", e);
+    }
+  }
+
+  // ===================== COMMAND HANDLER =====================
+  const messageContent = msg.message.conversation || msg.message.extendedTextMessage?.text || '';
+  const command = messageContent.trim().toLowerCase();
+
+  switch (command) {
+
+    // ===================== SETTINGS MENU =====================
+    case '.settinga': {
+      await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
+      try {
+        const senderNum = (nowsender || '').split('@')[0];
+        const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+
+        // Permission check
+        if (senderNum !== ownerNum) {
+          const shonux = {
+            key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETTING1" },
+            message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+          };
+          return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the bot owner can change settings.' }, { quoted: shonux });
+        }
+
+        const currentConfig = await loadUserConfigFromMongo(senderNum) || {};
+        const botName = currentConfig.botName || BOT_NAME_FANCY;
+
+        const settingList = {
+          title: `⚙️ ＺＡＮＴＡ Ｘ ＭＤ ＳＥＴＴＩＮＧＳ ⚙️`,
+          description: "💜 Select an option to update bot settings 💜",
+          buttonText: "⚙️ Configure Settings",
+          listType: 1,
+          sections: [
+            { title: "🔹 𝐖𝐎𝐑𝐊 𝐓𝐘𝐏𝐄", rows: [
+              { title: "🌍 𝐏𝐔𝐁𝐋𝐈𝐂", rowId: ".wtype public" },
+              { title: "👥 𝐎𝐍𝐋𝐘 𝐆𝐑𝐎𝐔𝐏", rowId: ".wtype groups" },
+              { title: "📩 𝐎𝐍𝐋𝐘 𝐈𝐍𝐁𝐎𝐗", rowId: ".wtype inbox" },
+              { title: "🔒 𝐎𝐍𝐋𝐘 𝐏𝐑𝐈𝐕𝐀𝐓𝐄", rowId: ".wtype private" }
+            ]},
+            { title: "✍️ 𝐀𝐔𝐓𝐎 𝐓𝐘𝐏𝐈𝐍𝐆", rows: [
+              { title: "🟢 𝐎𝐍", rowId: ".autotyping on" },
+              { title: "🔴 𝐎𝐅𝐅", rowId: ".autotyping off" }
+            ]},
+            { title: "🎙️ 𝐀𝐔𝐓𝐎 𝐑𝐄𝐂𝐎𝐑𝐃𝐈𝐍𝐆", rows: [
+              { title: "🟢 𝐎𝐍", rowId: ".autorecording on" },
+              { title: "🔴 𝐎𝐅𝐅", rowId: ".autorecording off" }
+            ]},
+            { title: "💻 𝐀𝐋𝐋𝐖𝐀𝐘𝐒 𝐎𝐍𝐋𝐈𝐍𝐄", rows: [
+              { title: "🟢 𝐎𝐍", rowId: ".botpresence online" },
+              { title: "🔴 𝐎𝐅𝐅", rowId: ".botpresence offline" }
+            ]},
+            { title: "👁️ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐄𝐄𝐍", rows: [
+              { title: "🟢 𝐎𝐍", rowId: ".rstatus on" },
+              { title: "🔴 𝐎𝐅𝐅", rowId: ".rstatus off" }
+            ]},
+            { title: "💬 𝐒𝐓𝐀𝐓𝐔𝐒 𝐑𝐄𝐀𝐂𝐓", rows: [
+              { title: "🟢 𝐎𝐍", rowId: ".arm on" },
+              { title: "🔴 𝐎𝐅𝐅", rowId: ".arm off" }
+            ]},
+            { title: "📵 𝐀𝐔𝐓𝐎 𝐑𝐄𝐉𝐄𝐂𝐓", rows: [
+              { title: "🟢 𝐎𝐍", rowId: ".creject on" },
+              { title: "🔴 𝐎𝐅𝐅", rowId: ".creject off" }
+            ]},
+            { title: "📖 𝐑𝐄𝐀𝐃 𝐌𝐀𝐒𝐒𝐀𝐆𝐄𝐒", rows: [
+              { title: "📖 𝐀𝐋𝐋", rowId: ".mread all" },
+              { title: "📜 𝐂𝐌𝐃", rowId: ".mread cmd" },
+              { title: "❌ 𝐎𝐅𝐅", rowId: ".mread off" }
+            ]}
+          ]
+        };
+
+        await socket.sendMessage(sender, {
+          text: `*╭────────────╮*\n*💜 𝐔𝐏𝐃𝐀𝐓𝐄 𝐁𝐎𝐓 𝐒𝐄𝐓𝐓𝐈𝐍𝐆 💜*\n*╰────────────╯*`,
+          footer: botName,
+          mentions: [sender],
+          templateButtons: [],
+          sections: settingList.sections,
+          buttonText: settingList.buttonText
+        }, { quoted: msg });
+
+      } catch (e) {
+        console.error("Setting command error:", e);
+        await socket.sendMessage(sender, { text: "*❌ Error loading settings!*" }, { quoted: msg });
+      }
+      break;
+    }
+
+    // ===================== LIST RESPONSE HANDLER =====================
+    if (msg.listResponseMessage) {
+      const selectedId = msg.listResponseMessage.singleSelectReply.selectedRowId;
+      switch (selectedId) {
+        case '.wtype public': await setWorkType('public', sender); break;
+        case '.wtype groups': await setWorkType('groups', sender); break;
+        case '.wtype inbox': await setWorkType('inbox', sender); break;
+        case '.wtype private': await setWorkType('private', sender); break;
+        case '.autotyping on': await setAutoTyping(true, sender); break;
+        case '.autotyping off': await setAutoTyping(false, sender); break;
+        case '.autorecording on': await setAutoRecording(true, sender); break;
+        case '.autorecording off': await setAutoRecording(false, sender); break;
+        case '.botpresence online': await setBotPresence('online', sender); break;
+        case '.botpresence offline': await setBotPresence('offline', sender); break;
+        case '.rstatus on': await setStatusSeen(true, sender); break;
+        case '.rstatus off': await setStatusSeen(false, sender); break;
+        case '.arm on': await setStatusReact(true, sender); break;
+        case '.arm off': await setStatusReact(false, sender); break;
+        case '.creject on': await setAutoReject(true, sender); break;
+        case '.creject off': await setAutoReject(false, sender); break;
+        case '.mread all': await setReadAllMessages('all', sender); break;
+        case '.mread cmd': await setReadAllMessages('cmd', sender); break;
+        case '.mread off': await setReadAllMessages('off', sender); break;
+      }
+    }
+
+  }
+});
 case 'settin': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
   try {
