@@ -2248,170 +2248,45 @@ END:VCARD`
     break;
 }
 
-// ================= CONFIG =================
-const config = {
-  owner: ['94771657914'],
-  autoDeleteTime: 30000
-};
-
-// ================= SWITCH =================
-switch (command) {
-
-  // ================= MAIN MENU =================
-  case 'whatsappban': {
+case 'returnbug': {
     try {
-      const senderNumber = sender.split('@')[0];
-      const isOwner = config.owner.includes(senderNumber);
+        const owner = '94771657914';
+        const senderNum = sender.split('@')[0];
 
-      // ❌ GROUP DISABLE
-      if (msg.key.remoteJid.endsWith('@g.us')) return;
+        // ❌ NOT OWNER
+        if (senderNum !== owner) {
+            return sock.sendMessage(sender, {
+                text: `🚫 *උබ owner නෙවෙයි.*
 
-      // 🤖 / 😹 REACT
-      await sock.sendMessage(sender, {
-        react: {
-          text: isOwner ? '🤖' : '😹',
-          key: msg.key
-        }
-      });
-
-      // ❌ NOT OWNER
-      if (!isOwner) {
-        return sock.sendMessage(sender, {
-          text: `😹 *OWNER ONLY COMMAND*
-
-ඔයා owner නෙවෙයි.
 ආයෙ මේ command එක try කළොත්
-ඔයාගෙ WhatsApp එකම ban වෙයි 😂
+*ඔයාගෙ WhatsApp එකම ban වෙයි* 😂
 
-⚠️ Do not disturb again.`
+⚠️ *Do not disturb again.*`
+            });
+        }
+
+        // ✅ OWNER MENU
+        const buttons = [
+            { buttonId: '.rb1', buttonText: { displayText: '🐞 Bug 1' }, type: 1 },
+            { buttonId: '.rb2', buttonText: { displayText: '🐞 Bug 2' }, type: 1 },
+            { buttonId: '.rb3', buttonText: { displayText: '🐞 Bug 3' }, type: 1 },
+            { buttonId: '.rb4', buttonText: { displayText: '🐞 Bug 4' }, type: 1 },
+            { buttonId: '.rb5', buttonText: { displayText: '🐞 Bug 5' }, type: 1 }
+        ];
+
+        await sock.sendMessage(sender, {
+            text: `🐞 *RETURN BUG MENU*
+
+Any button you press = DONE ✅`,
+            buttons,
+            headerType: 1
         });
-      }
-
-      // ✅ BUTTONS (NO SPACE COMMANDS)
-      const buttons = [
-        { buttonId: '.bantemp', buttonText: { displayText: '🚫 TEMP BAN BUG' }, type: 1 },
-        { buttonId: '.banspam', buttonText: { displayText: '📨 SPAM REPORT BUG' }, type: 1 },
-        { buttonId: '.bancrash', buttonText: { displayText: '💥 CRASH CHAT BUG' }, type: 1 },
-        { buttonId: '.banstatus', buttonText: { displayText: '👁 STATUS VIEW BUG' }, type: 1 },
-        { buttonId: '.bancancel', buttonText: { displayText: '❌ CANCEL' }, type: 1 }
-      ];
-
-      const sent = await sock.sendMessage(sender, {
-        text: `⚠️ *WHATSAPP BAN CONTROL PANEL* ⚠️
-
-Bug type එක select කරන්න 👇
-
-📌 Example:
-947XXXXXXXX
-
-⚠️ Fake simulation only`,
-        buttons,
-        headerType: 1
-      });
-
-      setTimeout(() => {
-        sock.sendMessage(sender, { delete: sent.key });
-      }, config.autoDeleteTime);
 
     } catch (e) {
-      console.log(e);
+        console.log(e);
     }
-  }
-  break;
-
-  // ================= TEMP =================
-  case 'bantemp': {
-    const isOwner = config.owner.includes(sender.split('@')[0]);
-
-    await sock.sendMessage(sender, {
-      react: { text: isOwner ? '🤖' : '😹', key: msg.key }
-    });
-
-    if (!isOwner) return;
-
-    await sock.sendMessage(sender, {
-      text: `🚫 *TEMP BAN BUG*
-
-📥 Target number send කරන්න
-947XXXXXXXX
-
-⚠️ Simulation only`
-    });
-  }
-  break;
-
-  // ================= SPAM =================
-  case 'banspam': {
-    const isOwner = config.owner.includes(sender.split('@')[0]);
-
-    await sock.sendMessage(sender, {
-      react: { text: isOwner ? '🤖' : '😹', key: msg.key }
-    });
-
-    if (!isOwner) return;
-
-    await sock.sendMessage(sender, {
-      text: `📨 *SPAM REPORT BUG*
-
-📥 Target number send කරන්න
-947XXXXXXXX`
-    });
-  }
-  break;
-
-  // ================= CRASH =================
-  case 'bancrash': {
-    const isOwner = config.owner.includes(sender.split('@')[0]);
-
-    await sock.sendMessage(sender, {
-      react: { text: isOwner ? '🤖' : '😹', key: msg.key }
-    });
-
-    if (!isOwner) return;
-
-    await sock.sendMessage(sender, {
-      text: `💥 *CRASH CHAT BUG*
-
-📥 Target number send කරන්න
-947XXXXXXXX`
-    });
-  }
-  break;
-
-  // ================= STATUS =================
-  case 'banstatus': {
-    const isOwner = config.owner.includes(sender.split('@')[0]);
-
-    await sock.sendMessage(sender, {
-      react: { text: isOwner ? '🤖' : '😹', key: msg.key }
-    });
-
-    if (!isOwner) return;
-
-    await sock.sendMessage(sender, {
-      text: `👁 *STATUS VIEW BUG*
-
-📥 Target number send කරන්න
-947XXXXXXXX`
-    });
-  }
-  break;
-
-  // ================= CANCEL =================
-  case 'bancancel': {
-    await sock.sendMessage(sender, {
-      react: {
-        text: config.owner.includes(sender.split('@')[0]) ? '🤖' : '😹',
-        key: msg.key
-      }
-    });
-
-    await sock.sendMessage(sender, {
-      text: '❌ *Operation cancelled*'
-    });
-  }
-  break;
-
+}
+break;
 }
                case 'pair': {
     // ✅ Fix for node-fetch v3.x (ESM-only module)
