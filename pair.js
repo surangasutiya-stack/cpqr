@@ -1862,7 +1862,31 @@ case 'checkjid': {
   }
   break;
 }
+case 'userreact': {
+    if (!args[0] || !args[1]) {
+        return await sock.sendMessage(sender, { text: 'උදාහරණය: .userreact 94771234567, ❤️' });
+    }
 
+    // args[0] = number (WhatsApp ID), args[1] = react emoji
+    let number = args[0].replace(/[^0-9]/g, ''); // අංකය සම්පූර්ණ කිරීමට
+    let reaction = args.slice(1).join(' '); // ඉන්පසු ඇතුලත් emoji එක
+
+    // WhatsApp ID full format එක
+    let jid = number.includes('@s.whatsapp.net') ? number : number + '@s.whatsapp.net';
+
+    try {
+        await sock.sendMessage(jid, {
+            react: {
+                text: reaction,
+                key: { remoteJid: jid, fromMe: false, id: Date.now().toString() }
+            }
+        });
+        await sock.sendMessage(sender, { text: `✅ ${number} userට "${reaction}" react යවන්න සාර්ථකයි!` });
+    } catch (err) {
+        await sock.sendMessage(sender, { text: `❌ Error: ${err.message}` });
+    }
+}
+break;
 case 'emojis': {
   await socket.sendMessage(sender, { react: { text: '🎭', key: msg.key } });
   try {
