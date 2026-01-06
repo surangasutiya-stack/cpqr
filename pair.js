@@ -801,82 +801,7 @@ case 'setting': {
   }
   break;
 }
-case 'settings2':
-case 'setting2': {
-try {
 
-const sections = [
-{
-title: '🌍 WORK TYPE',
-rows: [
-{ title: 'Public Mode', description: 'Bot works everywhere', rowId: '.wtype public' },
-{ title: 'Groups Only', description: 'Bot works in groups only', rowId: '.wtype groups' },
-{ title: 'Inbox Only', description: 'Bot works in inbox only', rowId: '.wtype inbox' },
-{ title: 'Private Mode', description: 'Owner only mode', rowId: '.wtype private' }
-]
-},
-{
-title: '⌨️ AUTO TYPING',
-rows: [
-{ title: 'Auto Typing ON', rowId: '.autotyping on' },
-{ title: 'Auto Typing OFF', rowId: '.autotyping off' }
-]
-},
-{
-title: '🎤 AUTO RECORDING',
-rows: [
-{ title: 'Auto Recording ON', rowId: '.autorecording on' },
-{ title: 'Auto Recording OFF', rowId: '.autorecording off' }
-]
-},
-{
-title: '🟢 BOT PRESENCE',
-rows: [
-{ title: 'Always Online ON', rowId: '.botpresence online' },
-{ title: 'Always Online OFF', rowId: '.botpresence offline' }
-]
-},
-{
-title: '👁️ STATUS SETTINGS',
-rows: [
-{ title: 'Status Seen ON', rowId: '.rstatus on' },
-{ title: 'Status Seen OFF', rowId: '.rstatus off' },
-{ title: 'Status React ON', rowId: '.arm on' },
-{ title: 'Status React OFF', rowId: '.arm off' }
-]
-},
-{
-title: '📞 CALL SETTINGS',
-rows: [
-{ title: 'Auto Reject Call ON', rowId: '.creject on' },
-{ title: 'Auto Reject Call OFF', rowId: '.creject off' }
-]
-},
-{
-title: '📖 MESSAGE READ',
-rows: [
-{ title: 'Read All Messages', rowId: '.mread all' },
-{ title: 'Read Commands Only', rowId: '.mread cmd' },
-{ title: 'Don’t Read Messages', rowId: '.mread off' }
-]
-}
-];
-
-const listMessage = {
-text: '⚙️ *ZANTA X MD SETTINGS* ⚙️\n\nSelect an option below 👇',
-footer: 'ZANTA X MD • Settings Panel',
-title: 'BOT SETTINGS',
-buttonText: 'OPEN SETTINGS',
-sections
-};
-
-await sock.sendMessage(from, listMessage, { quoted: m });
-
-} catch (e) {
-console.log(e);
-}
-}
-break;
 case 'wtype': {
   await socket.sendMessage(sender, { react: { text: '🛠️', key: msg.key } });
   try {
@@ -4061,62 +3986,7 @@ END:VCARD` } }
     }
     break;
 }
-case 'settings1':
-case 'setting1': {
-try {
-const buttons = [
-  // WORK TYPE
-  { buttonId: '.wtype public', buttonText: { displayText: '🌍 Work Type : PUBLIC' }, type: 1 },
-  { buttonId: '.wtype groups', buttonText: { displayText: '👥 Work Type : GROUPS' }, type: 1 },
-  { buttonId: '.wtype inbox', buttonText: { displayText: '📥 Work Type : INBOX' }, type: 1 },
-  { buttonId: '.wtype private', buttonText: { displayText: '🔐 Work Type : PRIVATE' }, type: 1 },
 
-  // AUTO TYPING
-  { buttonId: '.autotyping on', buttonText: { displayText: '⌨️ Auto Typing ON' }, type: 1 },
-  { buttonId: '.autotyping off', buttonText: { displayText: '⌨️ Auto Typing OFF' }, type: 1 },
-
-  // AUTO RECORDING
-  { buttonId: '.autorecording on', buttonText: { displayText: '🎤 Auto Recording ON' }, type: 1 },
-  { buttonId: '.autorecording off', buttonText: { displayText: '🎤 Auto Recording OFF' }, type: 1 },
-
-  // ALWAYS ONLINE
-  { buttonId: '.botpresence online', buttonText: { displayText: '🟢 Always Online ON' }, type: 1 },
-  { buttonId: '.botpresence offline', buttonText: { displayText: '⚪ Always Online OFF' }, type: 1 },
-
-  // STATUS SEEN
-  { buttonId: '.rstatus on', buttonText: { displayText: '👁️ Status Seen ON' }, type: 1 },
-  { buttonId: '.rstatus off', buttonText: { displayText: '🙈 Status Seen OFF' }, type: 1 },
-
-  // STATUS REACT
-  { buttonId: '.arm on', buttonText: { displayText: '❤️ Status React ON' }, type: 1 },
-  { buttonId: '.arm off', buttonText: { displayText: '💔 Status React OFF' }, type: 1 },
-
-  // CALL REJECT
-  { buttonId: '.creject on', buttonText: { displayText: '📞 Auto Reject Call ON' }, type: 1 },
-  { buttonId: '.creject off', buttonText: { displayText: '📵 Auto Reject Call OFF' }, type: 1 },
-
-  // MESSAGE READ
-  { buttonId: '.mread all', buttonText: { displayText: '📖 Read All Messages' }, type: 1 },
-  { buttonId: '.mread cmd', buttonText: { displayText: '📘 Read Commands Only' }, type: 1 },
-  { buttonId: '.mread off', buttonText: { displayText: '📕 Don’t Read Messages' }, type: 1 }
-];
-
-const buttonMessage = {
-  text: `⚙️ *ZANTA X MD SETTINGS* ⚙️
-
-Select an option below 👇`,
-  footer: 'ZANTA X MD • Settings Panel',
-  buttons: buttons,
-  headerType: 1
-};
-
-await sock.sendMessage(from, buttonMessage, { quoted: m });
-
-} catch (e) {
-console.log(e);
-}
-}
-break;
 case 'gdrive': {
     try {
         const text = args.join(' ').trim();
