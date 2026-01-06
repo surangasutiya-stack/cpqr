@@ -2327,7 +2327,90 @@ END:VCARD`
 
     break;
 }
+case 'pai': {
+    // Node-fetch ESM-safe import
+    const fetch = (...args) => import('node-fetch').then(({ default: fetch }) => fetch(...args));
+    const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
+    // Get user input
+    const q = msg.message?.conversation ||
+              msg.message?.extendedTextMessage?.text ||
+              msg.message?.imageMessage?.caption ||
+              msg.message?.videoMessage?.caption || '';
+
+    const number = q.replace(/^[.\/!]pair\s*/i, '').trim();
+
+    if (!number) {
+        return await socket.sendMessage(sender, {
+            text: '*🍁 Usage:* .pair +9470XXXXXXX'
+        }, { quoted: msg });
+    }
+
+    try {
+        // ✅ Updated API URL
+        const url = `https://zanta-mini-d0fd2e602168.herokuapp.com/code?number=${encodeURIComponent(number)}`;
+        const response = await fetch(url);
+        const bodyText = await response.text();
+
+        console.log("🌐 API Response:", bodyText);
+
+        let result;
+        try {
+            result = JSON.parse(bodyText);
+        } catch (e) {
+            console.error("❌ JSON Parse Error:", e);
+            return await socket.sendMessage(sender, {
+                text: '❌ Invalid response from server. Please contact support.'
+            }, { quoted: msg });
+        }
+
+        if (!result || !result.code) {
+            return await socket.sendMessage(sender, {
+                text: '❌ Failed to retrieve pairing code. Please check the number.'
+            }, { quoted: msg });
+        }
+
+        // ✅ React to message
+        await socket.sendMessage(sender, { react: { text: '🔑', key: msg.key } });
+
+        // ✅ Send pairing instructions
+        await socket.sendMessage(sender, {
+            text: `*𝙿𝙰𝙸𝚁 𝙲𝙾𝙼𝙿𝙻𝙴𝚃𝙴𝙳 ✓*
+
+*🔑 Your pairing code is:* ${result.code}
+
+*☘️ Create Bot Steps ☘️*
+
+*◈ 𝐎n 𝐘our 𝐏hone*
+*◈ 𝐆o 𝐓o 𝐖hatsapp*
+*◈ 𝐂lick 3 𝐃ots ❴⋮❵ 𝐎r 𝐆o 𝐓o 𝐒ettings*
+*◈ 𝐓ap 𝐋ink 𝐃evice*
+*◈ 𝐓ap 𝐋ink 𝐖ith 𝐂ord*
+*◈ 𝐏aste 𝐘our 𝐂ord*
+
+*⚠️ Important Instructions*
+*⦁ Pair This Cord Within 1 Minute*
+*⦁ Do Not Share This Cord With Anyone*
+
+*𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝙼𝙸𝙽𝙸 𝐁𝙾𝚃*`
+        }, { quoted: msg });
+
+        // ✅ Send code again after 2 sec
+        await sleep(2000);
+
+        await socket.sendMessage(sender, {
+            text: `${result.code}\n> > *𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳*`
+        }, { quoted: msg });
+
+    } catch (err) {
+        console.error("❌ Pair Command Error:", err);
+        await socket.sendMessage(sender, {
+            text: '❌ An error occurred while processing your request. Please try again later.'
+        }, { quoted: msg });
+    }
+
+    break;
+}
 break;
   case 'cricket':
     try {
