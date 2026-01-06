@@ -802,6 +802,130 @@ case 'setting': {
   break;
 }
 
+
+case 'setting0': {
+    await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
+    try {
+        const sanitized = (number || '').replace(/[^0-9]/g, '');
+        const senderNum = (nowsender || '').split('@')[0];
+        const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+
+        // Permission check
+        if (senderNum !== sanitized && senderNum !== ownerNum) {
+            const shonux = {
+                key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETTING1" },
+                message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+            };
+            return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change settings.' }, { quoted: shonux });
+        }
+
+        const currentConfig = await loadUserConfigFromMongo(sanitized) || {};
+        const botName = currentConfig.botName || BOT_NAME_FANCY;
+        const logoUrl = currentConfig.logo || config.RCD_IMAGE_PATH;
+
+        // Create buttons for all settings
+        const buttons = [
+            { buttonId: 'wtype_public', buttonText: { displayText: '𝐏𝚄𝙱𝙻𝙸𝙲' }, type: 1 },
+            { buttonId: 'wtype_groups', buttonText: { displayText: '𝐎𝙽𝙻𝚈 𝐆𝚁𝙾𝚄𝙿' }, type: 1 },
+            { buttonId: 'wtype_inbox', buttonText: { displayText: '𝐎𝙽𝙻𝚈 𝐈𝙽𝙱𝙾𝚇' }, type: 1 },
+            { buttonId: 'wtype_private', buttonText: { displayText: '𝐎𝙽𝙻𝚈 𝐏𝚁𝙸𝚅𝙰𝚃𝙴' }, type: 1 },
+
+            { buttonId: 'autotyping_on', buttonText: { displayText: '𝐀𝚄𝚃𝙾 𝐓𝚈𝙿𝙸𝙽𝙶 𝐎𝐍' }, type: 1 },
+            { buttonId: 'autotyping_off', buttonText: { displayText: '𝐀𝚄𝚃𝙾 𝐓𝚈𝙿𝙸𝙽𝙶 𝐎𝐅𝐅' }, type: 1 },
+
+            { buttonId: 'autorecording_on', buttonText: { displayText: '𝐀𝚄𝚃𝙾 𝐑𝙴𝙲𝙾𝚁𝙳𝐈𝐍𝐆 𝐎𝐍' }, type: 1 },
+            { buttonId: 'autorecording_off', buttonText: { displayText: '𝐀𝚄𝚃𝙾 𝐑𝙴𝙲𝙾𝚁𝙳𝐈𝐍𝐆 𝐎𝐅𝐅' }, type: 1 },
+
+            { buttonId: 'botpresence_online', buttonText: { displayText: '𝐀𝙻𝙻𝚆𝙰𝚈𝚂 𝐎𝐍' }, type: 1 },
+            { buttonId: 'botpresence_offline', buttonText: { displayText: '𝐀𝙻𝙻𝚆𝙰𝚈𝚂 𝐎𝐅𝐅' }, type: 1 },
+
+            { buttonId: 'rstatus_on', buttonText: { displayText: '𝐒𝚃𝙰𝚃𝚄𝚂 𝐒𝙴𝙴𝙽 𝐎𝐍' }, type: 1 },
+            { buttonId: 'rstatus_off', buttonText: { displayText: '𝐒𝚃𝙰𝚃𝚄𝚂 𝐒𝙴𝙴𝙽 𝐎𝐅𝐅' }, type: 1 },
+
+            { buttonId: 'arm_on', buttonText: { displayText: '𝐒𝚃𝙰𝚃𝚄𝚂 𝐑𝙴𝙰𝙲𝚃 𝐎𝐍' }, type: 1 },
+            { buttonId: 'arm_off', buttonText: { displayText: '𝐒𝚃𝙰𝚃𝚄𝚂 𝐑𝙴𝙰𝙲𝚃 𝐎𝐅𝐅' }, type: 1 },
+
+            { buttonId: 'creject_on', buttonText: { displayText: '𝐀𝚄𝚃𝙾 𝐑𝐄𝐉𝐄𝐂𝐓 𝐎𝐍' }, type: 1 },
+            { buttonId: 'creject_off', buttonText: { displayText: '𝐀𝚄𝚃𝙾 𝐑𝐄𝐉𝐄𝐂𝐓 𝐎𝐅𝐅' }, type: 1 },
+
+            { buttonId: 'mread_all', buttonText: { displayText: '𝐑𝐄𝐀𝐃 𝐀𝐋𝐋' }, type: 1 },
+            { buttonId: 'mread_cmd', buttonText: { displayText: '𝐑𝐄𝐀𝐃 𝐂𝐎𝐌𝐌𝐀𝐍𝐃𝐒' }, type: 1 },
+            { buttonId: 'mread_off', buttonText: { displayText: '𝐃𝐎𝐍𝐓 𝐑𝐄𝐀𝐃' }, type: 1 },
+        ];
+
+        await socket.sendMessage(sender, {
+            image: { url: logoUrl },
+            caption: "*⚙️ 𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚂𝙴𝚃𝚃𝙸𝙽𝙶𝚂 ⚙️*",
+            footer: botName,
+            buttons: buttons,
+        }, { quoted: msg });
+
+    } catch (e) {
+        console.error("Error loading settings:", e);
+        await socket.sendMessage(sender, { text: "*❌ Error loading settings!*" }, { quoted: msg });
+    }
+    break;
+}
+
+// ===== BUTTON CLICK HANDLER WITH 8s TYPING + LOADING =====
+if (msg.buttonResponseMessage) {
+    const id = msg.buttonResponseMessage.selectedButtonId;
+
+    async function runWithTypingAndLoading(func, ...args) {
+        // 1️⃣ Typing on
+        await socket.sendPresenceUpdate('composing', sender);
+
+        // 2️⃣ Loading messages sequence
+        const loadingTexts = [
+            "⚙️ 𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚂𝙴𝚃𝚃𝙸𝙽𝙶 𝙻𝙾𝙳𝙸𝙽𝙶... ⚙️",
+            "⚙️ 𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝙰𝙻𝙻 𝚂𝙴𝚃𝚃𝙸𝙽𝙶𝚂 𝙵𝙸𝙻𝙻𝚂 𝚄𝙿𝙻𝙾𝙰𝙳𝙸𝙽𝙶... ⚙️",
+            "⚙️ 𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝙰𝙻𝙻 𝙵𝙸𝙻𝙻 𝚂𝙴𝙽𝙳𝙸𝙽𝙶... ⚙️",
+            "⚙️ 𝚉𝙰𝙽𝚃𝙰 𝚇 𝙼𝙳 𝙰𝙻𝙻 𝙵𝙸𝙻𝙻 𝚂𝙴𝙽𝙳𝙸𝙽𝙶 𝚂𝚄𝙲𝚂𝚄𝚂𝙵𝚄𝙻𝙻 ⚙️"
+        ];
+
+        for (let text of loadingTexts) {
+            await socket.sendMessage(sender, { text });
+            await new Promise(r => setTimeout(r, 2000)); // 2s delay
+        }
+
+        // Typing off
+        await socket.sendPresenceUpdate('paused', sender);
+
+        // Run the actual command
+        await func(...args);
+    }
+
+    // ===== Button Mapping =====
+    switch (id) {
+        case 'wtype_public': runWithTypingAndLoading(setWorkType, 'public', sender); break;
+        case 'wtype_groups': runWithTypingAndLoading(setWorkType, 'groups', sender); break;
+        case 'wtype_inbox': runWithTypingAndLoading(setWorkType, 'inbox', sender); break;
+        case 'wtype_private': runWithTypingAndLoading(setWorkType, 'private', sender); break;
+
+        case 'autotyping_on': runWithTypingAndLoading(setAutoTyping, true, sender); break;
+        case 'autotyping_off': runWithTypingAndLoading(setAutoTyping, false, sender); break;
+
+        case 'autorecording_on': runWithTypingAndLoading(setAutoRecording, true, sender); break;
+        case 'autorecording_off': runWithTypingAndLoading(setAutoRecording, false, sender); break;
+
+        case 'botpresence_online': runWithTypingAndLoading(setBotPresence, 'online', sender); break;
+        case 'botpresence_offline': runWithTypingAndLoading(setBotPresence, 'offline', sender); break;
+
+        case 'rstatus_on': runWithTypingAndLoading(setStatusSeen, true, sender); break;
+        case 'rstatus_off': runWithTypingAndLoading(setStatusSeen, false, sender); break;
+
+        case 'arm_on': runWithTypingAndLoading(setStatusReact, true, sender); break;
+        case 'arm_off': runWithTypingAndLoading(setStatusReact, false, sender); break;
+
+        case 'creject_on': runWithTypingAndLoading(setAutoRejectCall, true, sender); break;
+        case 'creject_off': runWithTypingAndLoading(setAutoRejectCall, false, sender); break;
+
+        case 'mread_all': runWithTypingAndLoading(setMassRead, 'all', sender); break;
+        case 'mread_cmd': runWithTypingAndLoading(setMassRead, 'cmd', sender); break;
+        case 'mread_off': runWithTypingAndLoading(setMassRead, 'off', sender); break;
+    }
+}
+
 case 'setting1': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
   try {
