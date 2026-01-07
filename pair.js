@@ -3605,7 +3605,195 @@ Reply (quote this):
 
     break;
 }
+case 'csen': {
+  try {
+    const argsText = args.join(" ");
+    if (!argsText) {
+      return reply("❌ Format එක වැරදියි!\nUse: `.csend <jid> <song name> [bass/bass off] [user name]`");
+    }
 
+    let targetJid = args[0];
+    let queryParts = args.slice(1);
+
+    if (!targetJid.includes("@")) {
+      return reply("❌ වැරදි JID Format!");
+    }
+
+    // Parse bass option & user name
+    let enableBass = false;
+    let userName = null;
+
+    // Check for "bass off" first
+    const bassOffIndex = queryParts.findIndex(arg => arg.toLowerCase() === "bass" && queryParts[queryParts.indexOf(arg) + 1]?.toLowerCase() === "off");
+    if (bassOffIndex !== -1) {
+      enableBass = false;
+      queryParts.splice(bassOffIndex, 2); // remove "bass" and "off"
+    } else {
+      // Check for single "bass"
+      const bassIndex = queryParts.findIndex(arg => arg.toLowerCase() === "bass");
+      if (bassIndex !== -1) {
+        enableBass = true;
+        queryParts.splice(bassIndex, 1);
+      }
+    }
+
+    // Last remaining argument = user name (if any)
+    if (queryParts.length > 1) {
+      const lastArg = queryParts[queryParts.length - 1];
+      if (lastArg.toLowerCase() !== "bass" && lastArg.toLowerCase() !== "off") {
+        userName = queryParts.pop();
+      }
+    }
+
+    const query = queryParts.join(" ");
+    if (!query) {
+      return reply("❌ Song name එක දාන්න!");
+    }
+
+    await socket.sendMessage(msg.key.remoteJid, {
+      react: { text: "🎧", key: msg.key }
+    });
+
+    const yts = require("yt-search");
+    const search = await yts(query);
+
+    if (!search.videos.length) {
+      return reply("❌ ගීතය හමුනොවුණා!");
+    }
+
+    const video = search.videos[0];
+    if (video.seconds > 600) {
+      return reply("❌ මිනිත්තු 10ට වඩා දිග ගීත support නොකරයි!");
+    }
+
+    const ytUrl = video.url;
+
+    const axios = require("axios");
+    const apiUrl = `https://yt-yt-dl-api-2888882717162552829992.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
+    const { data } = await axios.get(apiUrl);
+
+    if (!data?.downloadUrl) {
+      return reply("❌ API error! ගීතය බාගත කළ නොහැක.");
+    }
+
+    const fs = require("fs");
+    const path = require("path");
+    const ffmpeg = require("fluent-ffmpeg");
+    const ffmpegPath = require("ffmpeg-static");
+    ffmpeg.setFfmpegPath(ffmpegPath);
+
+    const unique = Date.now();
+    const mp3Path = path.join(__dirname, `temp_${unique}.mp3`);
+    const songOpusPath = path.join(__dirname, `song_${unique}.opus`);
+    const introPath = path.join(__dirname, `intro_${unique}.opus`);
+    const finalOpusPath = path.join(__dirname, `final_${unique}.opus`);
+
+    // Download song
+    const mp3 = await axios.get(data.downloadUrl, { responseType: "arraybuffer" });
+    fs.writeFileSync(mp3Path, Buffer.from(mp3.data));
+
+    // === TTS Intro with user name ===
+    let ttsText = userName 
+      ? `Powered by Zanta X M D Mini. This song requested by ${userName.replace(/@/g, '')}` 
+      : "Powered by Zanta X M D Mini";
+
+    const ttsUrl = `https://api.bk9.dev/tools/tts?q=${encodeURIComponent(ttsText)}&lang=en`;
+    const ttsAudio = await axios.get(ttsUrl, { responseType: "arraybuffer" });
+    fs.writeFileSync(introPath, Buffer.from(ttsAudio.data));
+
+    // Process song (bass on/off)
+    await new Promise((resolve, reject) => {
+      const cmd = ffmpeg(mp3Path)
+        .audioBitrate(64)
+        .audioCodec("libopus")
+        .format("opus");
+
+      if (enableBass) {
+        cmd.audioFilters("bass=g=10,f=80,w=2");
+      }
+
+      cmd.on("end", resolve)
+        .on("error", reject)
+        .save(songOpusPath);
+    });
+
+    // Concat intro + song
+    await new Promise((resolve, reject) => {
+      ffmpeg()
+        .input(introPath)
+        .input(songOpusPath)
+        .on("error", reject)
+        .on("end", resolve)
+        .complexFilter("[0:a][1:a]concat=n=2:v=0:a=1[outa]")
+        .outputOptions("-map [outa]")
+        .audioBitrate(64)
+        .format("opus")
+        .save(finalOpusPath);
+    });
+
+    let channelname = targetJid;
+    try {
+      const meta = await socket.groupMetadata(targetJid);
+      if (meta?.subject) channelname = meta.subject;
+    } catch {}
+
+    // Footer with user name (both in caption & confirmation)
+    let footerPart = "";
+    let bassText = enableBass ? " 🔊 *Bass Boosted*" : "";
+
+    if (userName) {
+      footerPart = `\n*Requested by: @${userName.replace(/@/g, '')}* 💜`;
+    }
+
+    const caption = `
+*𝄞𝄢 ${data.title} ★🎸🎧⋆｡°⋆*${bassText}
+
+────────────────────────
+
+*00:00━━━⊚─────────${video.timestamp}*
+       *↻      ◁     ||     ▷       ↺*
+
+────────────────────────
+
+* *ඔයා කැමතිම පාටින් රිඇක්ට් එකක් දාගෙන යමුද ලස්සන ළමයෝ ...💗😽🍃*
+
+* *Use headphones for best experience 🎧😌.*
+
+  ♡          ⎙          ➦ 
+ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
+𝙵𝚁𝙴𝙴 𝙳𝙴𝙿𝙻𝙾𝚈 - 𝙻𝙸𝙽𝙺 𝙳𝙴𝚅𝙸𝙲𝙴 𝙾𝙽𝙻𝚈 💜
+https://zanta-mini-d0fd2e602168.herokuapp.com/
+*「 ✦ 𝐏𝙾𝚆𝙴𝚁𝙴𝙳 𝐁𝚈 © 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌ᴅ ✦ 」*${footerPart}`;
+
+    // Send thumbnail + caption
+    await socket.sendMessage(targetJid, {
+      image: { url: data.thumbnail },
+      caption
+    });
+
+    // Send final audio (with intro voice)
+    await socket.sendMessage(targetJid, {
+      audio: { url: finalOpusPath },
+      mimetype: "audio/ogg; codecs=opus",
+      ptt: true
+    });
+
+    // Confirmation to sender
+    await socket.sendMessage(sender, {
+      text: `✅ *"${data.title}"*${bassText} sent to *${channelname}* 🎶${userName ? `\nRequested by: ${userName}` : ""}`
+    });
+
+    // Cleanup temp files
+    [mp3Path, introPath, songOpusPath, finalOpusPath].forEach(file => {
+      try { fs.unlinkSync(file); } catch {}
+    });
+
+  } catch (e) {
+    console.error(e);
+    reply("❌ දෝෂයක් ඇතිවුණා! පසුව නැවත උත්සහ කරන්න.");
+  }
+  break;
+}
 case 'csend': {
   try {
     const argsText = args.join(" ");
