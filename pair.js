@@ -815,7 +815,7 @@ socket.ev.on('messages.upsert', async (m) => {
   }
 });
 
-case 'setting': {
+case 'mm': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
   try {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
