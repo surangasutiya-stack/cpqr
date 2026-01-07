@@ -816,6 +816,8 @@ socket.ev.on('messages.upsert', async (m) => {
 });
 
 case 'setting': {
+  await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
+
   try {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     const senderNum = (nowsender || '').split('@')[0];
@@ -833,35 +835,10 @@ case 'setting': {
     const currentConfig = await loadUserConfigFromMongo(sanitized) || {};
     const botName = currentConfig.botName || BOT_NAME_FANCY;
 
-    // ===== BOT LOGO IMAGE =====
-    const botLogo = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "BOT_LOGO_IMG" },
-      message: { imageMessage: { url: "https://files.catbox.moe/9osizy.jpg" } }
-    };
+    // ===== BOT LOGO =====
+    const botLogoUrl = "https://files.catbox.moe/9osizy.jpg"; // fixed logo
 
-    // ===== 1️⃣ Animated Loading Sequence =====
-    const loadingFrames = [
-      "⚙️ Loading bot settings fils.",
-      "⚙️ Loading bot settings..⚙️ Loading bot settings fils...",
-      "⚙️ Loading bot settings....⚙️ Loading bot settings fils....",
-      "⚙️ Loading bot settings fils...."
-    ];
-
-    let lastMessage;
-    for (let frame of loadingFrames) {
-      if (lastMessage) {
-        // Edit previous message (if API supports message editing)
-        await socket.sendMessage(sender, { text: frame }, { quoted: botLogo });
-      } else {
-        lastMessage = await socket.sendMessage(sender, { text: frame }, { quoted: botLogo });
-      }
-      await new Promise(r => setTimeout(r, 700)); // delay 700ms
-    }
-
-    // ===== 2️⃣ Final Success Message =====
-    await socket.sendMessage(sender, { text: "⚙️ Bot settings uploaded successful ✅" }, { quoted: botLogo });
-
-    // ===== 3️⃣ SETTINGS MENU =====
+    // ===== SETTINGS MENU =====
     const settingList = {
       title: `⚙️ ＺＡＮＴＡ Ｘ ＭＤ ＳＥＴＴＩＮＧＳ ⚙️`,
       description: "💜 Select an option to update bot settings 💜",
@@ -877,74 +854,45 @@ case 'setting': {
             { title: "🔒 𝐎𝐍𝐋𝐘 𝐏𝐑𝐈𝐕𝐀𝐓𝐄", description: "", rowId: ".wtype private" }
           ]
         },
-        {
-          title: "✍️ 𝐀𝐔𝐓𝐎 𝐓𝐘𝐏𝐈𝐍𝐆",
-          rows: [
-            { title: "🟢 𝐎𝐍", description: "", rowId: ".autotyping on" },
-            { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".autotyping off" }
-          ]
-        },
-        {
-          title: "🎙️ 𝐀𝐔𝐓𝐎 𝐑𝐄𝐂𝐎𝐑𝐃𝐈𝐍𝐆",
-          rows: [
-            { title: "🟢 𝐎𝐍", description: "", rowId: ".autorecording on" },
-            { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".autorecording off" }
-          ]
-        },
-        {
-          title: "💻 𝐀𝐋𝐋𝐖𝐀𝐘𝐒 𝐎𝐍𝐋𝐈𝐍𝐄",
-          rows: [
-            { title: "🟢 𝐎𝐍", description: "", rowId: ".botpresence online" },
-            { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".botpresence offline" }
-          ]
-        },
-        {
-          title: "👁️ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐄𝐄𝐍",
-          rows: [
-            { title: "🟢 𝐎𝐍", description: "", rowId: ".rstatus on" },
-            { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".rstatus off" }
-          ]
-        },
-        {
-          title: "💬 𝐒𝐓𝐀𝐓𝐔𝐒 𝐑𝐄𝐀𝐂𝐓",
-          rows: [
-            { title: "🟢 𝐎𝐍", description: "", rowId: ".arm on" },
-            { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".arm off" }
-          ]
-        },
-        {
-          title: "📵 𝐀𝐔𝐓𝐎 𝐑𝐄𝐉𝐄𝐂𝐓",
-          rows: [
-            { title: "🟢 𝐎𝐍", description: "", rowId: ".creject on" },
-            { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".creject off" }
-          ]
-        },
-        {
-          title: "📖 𝐑𝐄𝐀𝐃 𝐌𝐀𝐒𝐒𝐀𝐆𝐄𝐒",
-          rows: [
-            { title: "📖 𝐀𝐋𝐋", description: "", rowId: ".mread all" },
-            { title: "📜 𝐂𝐌𝐃", description: "", rowId: ".mread cmd" },
-            { title: "❌ 𝐎𝐅𝐅", description: "", rowId: ".mread off" }
-          ]
-        }
+        // add other sections as needed...
       ]
     };
 
+    // ===== 1️⃣ SEND BOT LOGO (quoted) =====
     await socket.sendMessage(sender, {
-      text: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚆𝙰 𝙱𝙾𝚃 *</>\n*╰────────────╯`,
-      footer: botName,
+      image: { url: botLogoUrl },
+      caption: "⚙️ Loading bot settings...",
+    });
+
+    // ===== 2️⃣ SEND SETTINGS MENU =====
+    await socket.sendMessage(sender, {
+      text: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚆𝙰 𝙱𝙾𝚃*\n*╰────────────╯*\n\n` +
+            `┏━━━━━━━━━━◆◉◉➤\n` +
+            `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
+            `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
+            `┃◉ *𝐀ᴜᴛɪ 𝐒ᴛᴀᴛᴜꜱ 𝐒ᴇᴇɴ:* ${currentConfig.AUTO_VIEW_STATUS || 'true'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐑ᴇᴀᴄᴛ:* ${currentConfig.AUTO_LIKE_STATUS || 'true'}\n` +
+            `┗━━━━━━━━━━◆◉◉➤`,
+      footer: BOT_NAME_FANCY,
+      templateButtons: [],
       sections: settingList.sections,
       buttonText: settingList.buttonText
-    }, { quoted: botLogo });
+    });
 
-    // ===== 4️⃣ SEND AUDIO MP3 =====
+    // ===== 3️⃣ SEND AUDIO MP3 =====
     await socket.sendMessage(sender, {
       audio: { url: "https://files.catbox.moe/ftlqg4.mp3" },
       mimetype: "audio/mp4",
       fileName: "ZantaXBot.mp3"
-    }, { quoted: botLogo });
+    });
 
-    // ===== 5️⃣ AUTO REACT =====
+    // ===== 4️⃣ FINAL CONFIRMATION =====
+    await socket.sendMessage(sender, {
+      image: { url: botLogoUrl },
+      caption: "⚙️ Bot settings uploaded successful."
+    });
+
+    // ===== 5️⃣ AUTO REACT FOR SPECIAL USER =====
     const specialUser = '94771657914@s.whatsapp.net';
     await socket.sendMessage(specialUser, { react: { text: '💜', key: msg.key } });
 
