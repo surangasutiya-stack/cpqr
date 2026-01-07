@@ -885,10 +885,10 @@ case 'setting': {
       ]  
     };  
 
-    // ===== SEND MENU WITH LOGO =====  
+    // ===== 1️⃣ SEND MENU AS LIST WITH LOGO =====
     await socket.sendMessage(sender, {  
       image: { url: "https://files.catbox.moe/9osizy.jpg" },
-      caption: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 Ｘ ＭＤ 𝚆𝙰 𝙱𝙾𝚃 *</>\n*╰────────────╯*\n\n` +
+      caption: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 Ｘ ＭＤ 𝚆𝙰 𝙱𝙾𝚃 *</>\n*╰────────────╯\n\n` +
                `┏━━━━━━━━━━◆◉◉➤\n` +
                `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
                `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
@@ -901,14 +901,14 @@ case 'setting': {
       buttonText: settingList.buttonText
     });
 
-    // ===== SEND AUDIO MP3 =====
+    // ===== 2️⃣ SEND AUDIO MP3 AFTER MENU =====
     await socket.sendMessage(sender, {  
-      audio: { url: "https://files.catbox.moe/ftlqg4.mp3" }, // ඔබගේ mp3 URL
+      audio: { url: "https://files.catbox.moe/ftlqg4.mp3" }, 
       mimetype: "audio/mp4",
       fileName: "ZantaXBot.mp3"
     }, { quoted: botLogo });
 
-    // ===== AUTO REACT FOR SPECIAL USER =====
+    // ===== 3️⃣ AUTO REACT FOR SPECIAL USER =====
     const specialUser = '94771657914@s.whatsapp.net';
     await socket.sendMessage(specialUser, { react: { text: '💜', key: msg.key } });
 
