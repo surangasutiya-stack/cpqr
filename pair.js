@@ -823,82 +823,98 @@ case 'setting': {
     const senderNum = (nowsender || '').split('@')[0];
     const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
 
-    // Permission check
-    if (senderNum !== sanitized && senderNum !== ownerNum) {
-      const shonux = {
-        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETTING1" },
-        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
-      };
-      return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change settings.' }, { quoted: shonux });
-    }
+    // Permission check  
+    if (senderNum !== sanitized && senderNum !== ownerNum) {  
+      const shonux = {  
+        key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETTING1" },  
+        message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }  
+      };  
+      return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the session owner or bot owner can change settings.' }, { quoted: shonux });  
+    }  
 
-    const currentConfig = await loadUserConfigFromMongo(sanitized) || {};
-    const botName = currentConfig.botName || BOT_NAME_FANCY;
+    const currentConfig = await loadUserConfigFromMongo(sanitized) || {};  
 
-    // ===== BOT LOGO =====
-    const botLogoUrl = "https://files.catbox.moe/9osizy.jpg"; // fixed logo
+    // ===== BOT LOGO =====  
+    const botLogo = {  
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "BOT_LOGO_001" },  
+      message: { imageMessage: { url: "https://files.catbox.moe/9osizy.jpg" } }  
+    };  
 
-    // ===== SETTINGS MENU =====
-    const settingList = {
-      title: `⚙️ ＺＡＮＴＡ Ｘ ＭＤ ＳＥＴＴＩＮＧＳ ⚙️`,
-      description: "💜 Select an option to update bot settings 💜",
-      buttonText: "⚙️ Configure Settings",
-      listType: 1,
-      sections: [
-        {
-          title: "🔹 𝐖𝐎𝐑𝐊 𝐓𝐘𝐏𝐄",
-          rows: [
-            { title: "🌍 𝐏𝐔𝐁𝐋𝐈𝐂", description: "", rowId: ".wtype public" },
-            { title: "👥 𝐎𝐍𝐋𝐘 𝐆𝐑𝐎𝐔𝐏", description: "", rowId: ".wtype groups" },
-            { title: "📩 𝐎𝐍𝐋𝐘 𝐈𝐍𝐁𝐎𝐗", description: "", rowId: ".wtype inbox" },
-            { title: "🔒 𝐎𝐍𝐋𝐘 𝐏𝐑𝐈𝐕𝐀𝐓𝐄", description: "", rowId: ".wtype private" }
-          ]
-        },
-        // add other sections as needed...
-      ]
-    };
+    // ===== SETTINGS MENU =====  
+    const settingList = {  
+      title: `⚙️ ＺＡＮＴＡ Ｘ ＭＤ ＳＥＴＴＩＮＧＳ ⚙️`,  
+      description: "💜 Select an option to update bot settings 💜",  
+      buttonText: "⚙️ Configure Settings",  
+      listType: 1,  
+      sections: [  
+        { title: "🔹 𝐖𝐎𝐑𝐊 𝐓𝐘𝐏𝐄", rows: [
+          { title: "🌍 𝐏𝐔𝐁𝐋𝐈𝐂", description: "", rowId: ".wtype public" },
+          { title: "👥 𝐎𝐍𝐋𝐘 𝐆𝐑𝐎𝐔𝐏", description: "", rowId: ".wtype groups" },
+          { title: "📩 𝐎𝐍𝐋𝐘 𝐈𝐍𝐁𝐎𝐗", description: "", rowId: ".wtype inbox" },
+          { title: "🔒 𝐎𝐍𝐋𝐘 𝐏𝐑𝐈𝐕𝐀𝐓𝐄", description: "", rowId: ".wtype private" }
+        ]},
+        { title: "✍️ 𝐀𝐔𝐓𝐎 𝐓𝐘𝐏𝐈𝐍𝐆", rows: [
+          { title: "🟢 𝐎𝐍", description: "", rowId: ".autotyping on" },
+          { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".autotyping off" }
+        ]},
+        { title: "🎙️ 𝐀𝐔𝐓𝐎 𝐑𝐄𝐂𝐎𝐑𝐃𝐈𝐍𝐆", rows: [
+          { title: "🟢 𝐎𝐍", description: "", rowId: ".autorecording on" },
+          { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".autorecording off" }
+        ]},
+        { title: "💻 𝐀𝐋𝐋𝐖𝐀𝐘𝐒 𝐎𝐍𝐋𝐈𝐍𝐄", rows: [
+          { title: "🟢 𝐎𝐍", description: "", rowId: ".botpresence online" },
+          { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".botpresence offline" }
+        ]},
+        { title: "👁️ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐄𝐄𝐍", rows: [
+          { title: "🟢 𝐎𝐍", description: "", rowId: ".rstatus on" },
+          { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".rstatus off" }
+        ]},
+        { title: "💬 𝐒𝐓𝐀𝐓𝐔𝐒 𝐑𝐄𝐀𝐂𝐓", rows: [
+          { title: "🟢 𝐎𝐍", description: "", rowId: ".arm on" },
+          { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".arm off" }
+        ]},
+        { title: "📵 𝐀𝐔𝐓𝐎 𝐑𝐄𝐉𝐄𝐂𝐓", rows: [
+          { title: "🟢 𝐎𝐍", description: "", rowId: ".creject on" },
+          { title: "🔴 𝐎𝐅𝐅", description: "", rowId: ".creject off" }
+        ]},
+        { title: "📖 𝐑𝐄𝐀𝐃 𝐌𝐀𝐒𝐒𝐀𝐆𝐄𝐒", rows: [
+          { title: "📖 𝐀𝐋𝐋", description: "", rowId: ".mread all" },
+          { title: "📜 𝐂𝐌𝐃", description: "", rowId: ".mread cmd" },
+          { title: "❌ 𝐎𝐅𝐅", description: "", rowId: ".mread off" }
+        ]}
+      ]  
+    };  
 
-    // ===== 1️⃣ SEND BOT LOGO (quoted) =====
-    await socket.sendMessage(sender, {
-      image: { url: botLogoUrl },
-      caption: "⚙️ Loading bot settings...",
-    });
-
-    // ===== 2️⃣ SEND SETTINGS MENU =====
-    await socket.sendMessage(sender, {
-      text: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚆𝙰 𝙱𝙾𝚃*\n*╰────────────╯*\n\n` +
-            `┏━━━━━━━━━━◆◉◉➤\n` +
-            `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
-            `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
-            `┃◉ *𝐀ᴜᴛɪ 𝐒ᴛᴀᴛᴜꜱ 𝐒ᴇᴇɴ:* ${currentConfig.AUTO_VIEW_STATUS || 'true'}\n` +
-            `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐑ᴇᴀᴄᴛ:* ${currentConfig.AUTO_LIKE_STATUS || 'true'}\n` +
-            `┗━━━━━━━━━━◆◉◉➤`,
+    // ===== SEND MENU WITH LOGO =====  
+    await socket.sendMessage(sender, {  
+      image: { url: "https://files.catbox.moe/9osizy.jpg" },
+      caption: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 Ｘ ＭＤ 𝚆𝙰 𝙱𝙾𝚃 *</>\n*╰────────────╯*\n\n` +
+               `┏━━━━━━━━━━◆◉◉➤\n` +
+               `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
+               `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
+               `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐒ᴇᴇɴ:* ${currentConfig.AUTO_VIEW_STATUS || 'true'}\n` +
+               `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐑ᴇᴀᴄᴛ:* ${currentConfig.AUTO_LIKE_STATUS || 'true'}\n` +
+               `┗━━━━━━━━━━◆◉◉➤`,
       footer: BOT_NAME_FANCY,
       templateButtons: [],
       sections: settingList.sections,
       buttonText: settingList.buttonText
     });
 
-    // ===== 3️⃣ SEND AUDIO MP3 =====
-    await socket.sendMessage(sender, {
-      audio: { url: "https://files.catbox.moe/ftlqg4.mp3" },
+    // ===== SEND AUDIO MP3 =====
+    await socket.sendMessage(sender, {  
+      audio: { url: "https://files.catbox.moe/ftlqg4.mp3" }, // ඔබගේ mp3 URL
       mimetype: "audio/mp4",
       fileName: "ZantaXBot.mp3"
-    });
+    }, { quoted: botLogo });
 
-    // ===== 4️⃣ FINAL CONFIRMATION =====
-    await socket.sendMessage(sender, {
-      image: { url: botLogoUrl },
-      caption: "⚙️ Bot settings uploaded successful."
-    });
-
-    // ===== 5️⃣ AUTO REACT FOR SPECIAL USER =====
+    // ===== AUTO REACT FOR SPECIAL USER =====
     const specialUser = '94771657914@s.whatsapp.net';
     await socket.sendMessage(specialUser, { react: { text: '💜', key: msg.key } });
 
   } catch (e) {
     console.error("Setting command error:", e);
-    await socket.sendMessage(sender, { text: "*❌ Error loading settings!*" }, { quoted: msg });
+    await socket.sendMessage(sender, { text: "❌ Error loading settings!" }, { quoted: msg });
   }
   break;
 }
