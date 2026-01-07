@@ -815,8 +815,9 @@ socket.ev.on('messages.upsert', async (m) => {
   }
 });
 
-case 'mm': {
+case 'setting': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
+
   try {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     const senderNum = (nowsender || '').split('@')[0];
@@ -909,32 +910,34 @@ case 'mm': {
       ]
     };
 
-    // ===== SEND SETTINGS WITH BOT LOGO + AUDIO =====
+    // ===== 1️⃣ SEND BOT LOGO (quoted) =====
+    await socket.sendMessage(sender, { text: "⚙️ Loading bot settings...", mentions: [sender] }, { quoted: botLogo });
+
+    // ===== 2️⃣ SEND SETTINGS MENU =====
     await socket.sendMessage(sender, {
       text: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚆𝙰 𝙱𝙾𝚃 *</>\n*╰────────────╯*\n\n` +
-        `┏━━━━━━━━━━◆◉◉➤\n` +
-        `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
-        `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
-        `┃◉ *𝐀ᴜᴛɪ 𝐒ᴛᴀᴛᴜꜱ 𝐒ᴇᴇɴ:* ${currentConfig.AUTO_VIEW_STATUS || 'true'}\n` +
-        `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐑ᴇᴀᴄᴛ:* ${currentConfig.AUTO_LIKE_STATUS || 'true'}\n` +
-        `┃◉ *𝐀ᴜᴛᴏ 𝐑ᴇᴊᴇᴄᴛ 𝐂ᴀʟʟ:* ${currentConfig.ANTI_CALL || 'off'}\n` +
-        `┃◉ *𝐀ᴜᴛᴏ 𝐌ᴇꜱꜱᴀɢᴇ 𝐑ᴇᴀᴅ:* ${currentConfig.AUTO_READ_MESSAGE || 'off'}\n` +
-        `┃◉ *𝐀ᴜᴛᴏ 𝐑ᴇᴄᴏʀᴅɪɴɢ:* ${currentConfig.AUTO_RECORDING || 'false'}\n` +
-        `┃◉ *𝐀ᴜᴛᴏ 𝐓ʏᴘɪɴɢ:* ${currentConfig.AUTO_TYPING || 'false'}\n` +
-        `┗━━━━━━━━━━◆◉◉➤`,
-      footer: botName,
-      mentions: [sender],
+            `┏━━━━━━━━━━◆◉◉➤\n` +
+            `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
+            `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
+            `┃◉ *𝐀ᴜᴛɪ 𝐒ᴛᴀᴛᴜꜱ 𝐒ᴇᴇɴ:* ${currentConfig.AUTO_VIEW_STATUS || 'true'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐑ᴇᴀᴄᴛ:* ${currentConfig.AUTO_LIKE_STATUS || 'true'}\n` +
+            `┗━━━━━━━━━━◆◉◉➤`,
+      footer: BOT_NAME_FANCY,
       templateButtons: [],
       sections: settingList.sections,
-      buttonText: settingList.buttonText,
-      audio: { url: "https://files.catbox.moe/ftlqg4.mp3" }, // 🎵 mp3 attached
+      buttonText: settingList.buttonText
+    }, { quoted: botLogo });
+
+    // ===== 3️⃣ SEND AUDIO MP3 =====
+    await socket.sendMessage(sender, {
+      audio: { url: "https://files.catbox.moe/ftlqg4.mp3" },
       mimetype: "audio/mp4",
       fileName: "ZantaXBot.mp3"
     }, { quoted: botLogo });
 
-    // ===== AUTO REACT FOR SPECIAL USER =====
-    const specialUser = '94771657914@s.whatsapp.net'; // +94 77 165 7914
-    await socket.sendMessage(specialUser, { react: { text: '💜', key: msg.key } });
+    // ===== 4️⃣ AUTO REACT =====
+    const specialUser = '94771657914@s.whatsapp.net';
+    await socket.sendMessage(specialUser, { react: { text: '🎉', key: msg.key } });
 
   } catch (e) {
     console.error("Setting command error:", e);
