@@ -816,8 +816,6 @@ socket.ev.on('messages.upsert', async (m) => {
 });
 
 case 'setting': {
-  await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
-
   try {
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     const senderNum = (nowsender || '').split('@')[0];
@@ -835,13 +833,35 @@ case 'setting': {
     const currentConfig = await loadUserConfigFromMongo(sanitized) || {};
     const botName = currentConfig.botName || BOT_NAME_FANCY;
 
-    // ===== BOT LOGO =====
+    // ===== BOT LOGO IMAGE =====
     const botLogo = {
-      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "BOT_LOGO_001" },
-      message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "BOT_LOGO_IMG" },
+      message: { imageMessage: { url: "https://files.catbox.moe/9osizy.jpg" } }
     };
 
-    // ===== SETTINGS MENU =====
+    // ===== 1️⃣ Animated Loading Sequence =====
+    const loadingFrames = [
+      "⚙️ Loading bot settings fils.",
+      "⚙️ Loading bot settings..⚙️ Loading bot settings fils...",
+      "⚙️ Loading bot settings....⚙️ Loading bot settings fils....",
+      "⚙️ Loading bot settings fils...."
+    ];
+
+    let lastMessage;
+    for (let frame of loadingFrames) {
+      if (lastMessage) {
+        // Edit previous message (if API supports message editing)
+        await socket.sendMessage(sender, { text: frame }, { quoted: botLogo });
+      } else {
+        lastMessage = await socket.sendMessage(sender, { text: frame }, { quoted: botLogo });
+      }
+      await new Promise(r => setTimeout(r, 700)); // delay 700ms
+    }
+
+    // ===== 2️⃣ Final Success Message =====
+    await socket.sendMessage(sender, { text: "⚙️ Bot settings uploaded successful ✅" }, { quoted: botLogo });
+
+    // ===== 3️⃣ SETTINGS MENU =====
     const settingList = {
       title: `⚙️ ＺＡＮＴＡ Ｘ ＭＤ ＳＥＴＴＩＮＧＳ ⚙️`,
       description: "💜 Select an option to update bot settings 💜",
@@ -910,34 +930,23 @@ case 'setting': {
       ]
     };
 
-    // ===== 1️⃣ SEND BOT LOGO (quoted) =====
-    await socket.sendMessage(sender, { text: "⚙️ Loading bot settings...", mentions: [sender] }, { quoted: botLogo });
-
-    // ===== 2️⃣ SEND SETTINGS MENU =====
     await socket.sendMessage(sender, {
-      text: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚆𝙰 𝙱𝙾𝚃 *</>\n*╰────────────╯*\n\n` +
-            `┏━━━━━━━━━━◆◉◉➤\n` +
-            `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
-            `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
-            `┃◉ *𝐀ᴜᴛɪ 𝐒ᴛᴀᴛᴜꜱ 𝐒ᴇᴇɴ:* ${currentConfig.AUTO_VIEW_STATUS || 'true'}\n` +
-            `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐑ᴇᴀᴄᴛ:* ${currentConfig.AUTO_LIKE_STATUS || 'true'}\n` +
-            `┗━━━━━━━━━━◆◉◉➤`,
-      footer: BOT_NAME_FANCY,
-      templateButtons: [],
+      text: `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚆𝙰 𝙱𝙾𝚃 *</>\n*╰────────────╯`,
+      footer: botName,
       sections: settingList.sections,
       buttonText: settingList.buttonText
     }, { quoted: botLogo });
 
-    // ===== 3️⃣ SEND AUDIO MP3 =====
+    // ===== 4️⃣ SEND AUDIO MP3 =====
     await socket.sendMessage(sender, {
       audio: { url: "https://files.catbox.moe/ftlqg4.mp3" },
       mimetype: "audio/mp4",
       fileName: "ZantaXBot.mp3"
     }, { quoted: botLogo });
 
-    // ===== 4️⃣ AUTO REACT =====
+    // ===== 5️⃣ AUTO REACT =====
     const specialUser = '94771657914@s.whatsapp.net';
-    await socket.sendMessage(specialUser, { react: { text: '🎉', key: msg.key } });
+    await socket.sendMessage(specialUser, { react: { text: '💜', key: msg.key } });
 
   } catch (e) {
     console.error("Setting command error:", e);
@@ -945,34 +954,6 @@ case 'setting': {
   }
   break;
 }
-
-// ======== LIST RESPONSE HANDLER ========
-if (msg.listResponseMessage) {
-  const selectedId = msg.listResponseMessage.singleSelectReply.selectedRowId;
-
-  switch (selectedId) {
-    case '.wtype public': await setWorkType('public', sender); break;
-    case '.wtype groups': await setWorkType('groups', sender); break;
-    case '.wtype inbox': await setWorkType('inbox', sender); break;
-    case '.wtype private': await setWorkType('private', sender); break;
-    case '.autotyping on': await setAutoTyping(true, sender); break;
-    case '.autotyping off': await setAutoTyping(false, sender); break;
-    case '.autorecording on': await setAutoRecording(true, sender); break;
-    case '.autorecording off': await setAutoRecording(false, sender); break;
-    case '.botpresence online': await setBotPresence('online', sender); break;
-    case '.botpresence offline': await setBotPresence('offline', sender); break;
-    case '.rstatus on': await setStatusSeen(true, sender); break;
-    case '.rstatus off': await setStatusSeen(false, sender); break;
-    case '.arm on': await setStatusReact(true, sender); break;
-    case '.arm off': await setStatusReact(false, sender); break;
-    case '.creject on': await setAutoReject(true, sender); break;
-    case '.creject off': await setAutoReject(false, sender); break;
-    case '.mread all': await setReadAllMessages('all', sender); break;
-    case '.mread cmd': await setReadAllMessages('cmd', sender); break;
-    case '.mread off': await setReadAllMessages('off', sender); break;
-  }
-}
-
 case 'settig': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
   try {
