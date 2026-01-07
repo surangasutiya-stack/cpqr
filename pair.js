@@ -3605,6 +3605,150 @@ Reply (quote this):
 
     break;
 }
+
+case 'cse': {
+  try {
+    const argsText = args.join(" ");
+    if (!argsText) {
+      return reply("❌ Format එක වැරදියි!\nUse: `.csend <jid> <song name> [bass]`");
+    }
+
+    let targetJid, query, isBass = false;
+
+    if (args[args.length - 1].toLowerCase() === "bass") {
+      isBass = true;
+      targetJid = args[0];
+      query = args.slice(1, -1).join(" ");
+    } else {
+      targetJid = args[0];
+      query = args.slice(1).join(" ");
+    }
+
+    if (!targetJid || !query || !targetJid.includes("@")) {
+      return reply("❌ වැරදි Format / JID!");
+    }
+
+    await socket.sendMessage(msg.key.remoteJid, {
+      react: { text: "🎧", key: msg.key }
+    });
+
+    const yts = require("yt-search");
+    const search = await yts(query);
+
+    if (!search.videos.length) {
+      return reply("❌ ගීතය හමුනොවුණා!");
+    }
+
+    const video = search.videos[0];
+    if (video.seconds > 600) {
+      return reply("❌ මිනිත්තු 10ට වඩා දිග ගීත support නොකරයි!");
+    }
+
+    const ytUrl = video.url;
+
+    const axios = require("axios");
+    const apiUrl = `https://yt-yt-dl-api-2888882717162552829992.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
+    const { data } = await axios.get(apiUrl);
+
+    if (!data?.downloadUrl) {
+      return reply("❌ API error! ගීතය බාගත කළ නොහැක.");
+    }
+
+    const fs = require("fs");
+    const path = require("path");
+    const ffmpeg = require("fluent-ffmpeg");
+    const ffmpegPath = require("ffmpeg-static");
+    ffmpeg.setFfmpegPath(ffmpegPath);
+
+    const unique = Date.now();
+    const mp3Path = path.join(__dirname, `temp_${unique}.mp3`);
+    const opusPath = path.join(__dirname, `temp_${unique}.opus`);
+
+    // Download MP3
+    const mp3 = await axios.get(data.downloadUrl, { responseType: "arraybuffer" });
+    fs.writeFileSync(mp3Path, Buffer.from(mp3.data));
+
+    // FFmpeg command setup
+    const ffmpegCommand = ffmpeg(mp3Path)
+      .audioBitrate(64)
+      .audioCodec("libopus")
+      .format("opus")
+      .outputOptions("-af", isBass 
+        ? "equalizer=f=80:t=q:w=2:g=9, equalizer=f=150:t=q:w=1.5:g=6, volume=1.2"  // Strong but clean bass boost
+        : "volume=1.0"  // Normal volume
+      );
+
+    await new Promise((resolve, reject) => {
+      ffmpegCommand
+        .on("end", () => {
+          console.log("Audio processing completed");
+          resolve();
+        })
+        .on("error", (err) => {
+          console.error("FFmpeg error:", err.message);
+          reject(err);
+        })
+        .save(opusPath);
+    });
+
+    let channelname = targetJid;
+    try {
+      const meta = await socket.groupMetadata(targetJid);
+      if (meta?.subject) channelname = meta.subject;
+    } catch {}
+
+    let extraCaption = "";
+    if (isBass) {
+      extraCaption = "\n*🔊 Bass Boosted Version 🔥*";
+    }
+
+    const caption = `
+*𝄞𝄢 ${data.title} ★🎸🎧⋆｡°⋆*${extraCaption}
+
+────────────────────────
+
+*00:00━━━⊚─────────${video.timestamp}*
+       *↻      ◁     ||     ▷       ↺*
+
+────────────────────────
+
+* *ඔයා කැමතිම පාටින් රිඇක්ට් එකක් දාගෙන යමුද ලස්සන ළමයෝ ...💗😽🍃*
+
+* *Use headphones for best experience 🎧😌.*
+
+  ♡          ⎙          ➦ 
+ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
+𝙵𝚁𝙴𝙴 𝙳𝙴𝙿𝙻𝙾𝚈 - 𝙻𝙸𝙽𝙺 𝙳𝙴𝚅𝙸𝙲𝙴 𝙾𝙽𝙻𝚈 💜
+https://zanta-mini-d0fd2e602168.herokuapp.com/
+*「 ✦ 𝐏𝙾𝚆𝙴𝚁𝙴𝙳 𝐁𝚈 © 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳 ✦ 」*`;
+
+    await socket.sendMessage(targetJid, {
+      image: { url: data.thumbnail },
+      caption
+    });
+
+    await socket.sendMessage(targetJid, {
+      audio: fs.createReadStream(opusPath),
+      mimetype: "audio/ogg; codecs=opus",
+      ptt: true
+    });
+
+    await socket.sendMessage(sender, {
+      text: `✅ *"${data.title}"* ${isBass ? "(Bass Boosted 🔥)" : ""} sent to *${channelname}* 🎶`
+    });
+
+    // Cleanup
+    try {
+      fs.unlinkSync(mp3Path);
+      fs.unlinkSync(opusPath);
+    } catch (e) {}
+
+  } catch (e) {
+    console.error("CSEND Error:", e);
+    reply("❌ දෝෂයක් ඇතිවුණා! පසුව නැවත උත්සහ කරන්න.\nError: " + (e.message || "Unknown"));
+  }
+  break;
+}
 case 'csen': {
   try {
     const argsText = args.join(" ");
