@@ -3605,6 +3605,158 @@ Reply (quote this):
 
     break;
 }
+case 'cs': {
+  try {
+    const argsText = args.join(" ");
+    if (!argsText) {
+      return reply("❌ Format එක වැරදියි!\nUse: `.csend <jid> <song name> [bass]`");
+    }
+
+    let targetJid, query, isBass = false;
+
+    // Check if last word is "bass"
+    if (args[args.length - 1].toLowerCase() === "bass") {
+      isBass = true;
+      targetJid = args[0];
+      query = args.slice(1, -1).join(" ");
+    } else {
+      targetJid = args[0];
+      query = args.slice(1).join(" ");
+    }
+
+    if (!targetJid || !query || !targetJid.includes("@")) {
+      return reply("❌ වැරදි Format / JID!");
+    }
+
+    await socket.sendMessage(msg.key.remoteJid, {
+      react: { text: "🎧", key: msg.key }
+    });
+
+    const yts = require("yt-search");
+    const search = await yts(query);
+
+    if (!search.videos.length) {
+      return reply("❌ ගීතය හමුනොවුණා!");
+    }
+
+    const video = search.videos[0];
+    if (video.seconds > 600) {
+      return reply("❌ මිනිත්තු 10ට වඩා දිග ගීත support නොකරයි!");
+    }
+
+    const ytUrl = video.url;
+
+    const axios = require("axios");
+    const apiUrl = `https://yt-yt-dl-api-2888882717162552829992.vercel.app/mp3?id=${encodeURIComponent(ytUrl)}`;
+    const { data } = await axios.get(apiUrl);
+
+    if (!data?.downloadUrl) {
+      return reply("❌ API error! ගීතය බාගත කළ නොහැක.");
+    }
+
+    const fs = require("fs");
+    const path = require("path");
+    const ffmpeg = require("fluent-ffmpeg");
+    const ffmpegPath = require("ffmpeg-static");
+    ffmpeg.setFfmpegPath(ffmpegPath);
+
+    const unique = Date.now();
+    const mp3Path = path.join(__dirname, `temp_${unique}.mp3`);
+    const opusPath = path.join(__dirname, `temp_${unique}.opus`);
+
+    // Download MP3
+    console.log("Downloading MP3...");
+    const mp3Response = await axios.get(data.downloadUrl, { responseType: "arraybuffer" });
+    fs.writeFileSync(mp3Path, Buffer.from(mp3Response.data));
+    console.log("MP3 downloaded:", mp3Path);
+
+    // FFmpeg convert with optional bass boost
+    const command = ffmpeg(mp3Path)
+      .audioBitrate(64)
+      .audioCodec("libopus")
+      .format("opus")
+      .on("start", (cmdline) => {
+        console.log("FFmpeg started:", cmdline);
+      })
+      .on("progress", (progress) => {
+        console.log("Processing:", progress.percent ? progress.percent.toFixed(2) + "%" : "ongoing");
+      })
+      .on("end", () => {
+        console.log("FFmpeg processing completed successfully");
+      })
+      .on("error", (err) => {
+        console.error("FFmpeg ERROR:", err.message);
+      });
+
+    // Apply bass boost only if requested - using the most compatible 'bass' filter
+    if (isBass) {
+      command.audioFilters("bass=g=7,f=80,w=0.8"); // Clean, moderate bass boost
+    }
+
+    await new Promise((resolve, reject) => {
+      command.save(opusPath)
+        .on("end", resolve)
+        .on("error", reject);
+    });
+
+    let channelname = targetJid;
+    try {
+      const meta = await socket.groupMetadata(targetJid);
+      if (meta?.subject) channelname = meta.subject;
+    } catch {}
+
+    const extraCaption = isBass ? "\n*🔊 Bass Boosted Version 🔥*" : "";
+
+    const caption = `
+*𝄞𝄢 ${data.title} ★🎸🎧⋆｡°⋆*${extraCaption}
+
+────────────────────────
+
+*00:00━━━⊚─────────${video.timestamp}*
+       *↻      ◁     ||     ▷       ↺*
+
+────────────────────────
+
+* *ඔයා කැමතිම පාටින් රිඇක්ට් එකක් දාගෙන යමුද ලස්සන ළමයෝ ...💗😽🍃*
+
+* *Use headphones for best experience 🎧😌.*
+
+  ♡          ⎙          ➦ 
+ʳᵉᵃᶜᵗ       ˢᵃᵛᵉ       ˢʰᵃʳᵉ
+𝙵𝚁𝙴𝙴 𝙳𝙴𝙿𝙻𝙾𝚈 - 𝙻𝙸𝙽𝙺 𝙳𝙴𝚅𝙸𝙲𝙴 𝙾𝙽𝙻𝚈 💜
+https://zanta-mini-d0fd2e602168.herokuapp.com/
+*「 ✦ 𝐏𝙾𝚆𝙴𝚁𝙴𝙳 𝐁𝚈 © 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳 ✦ 」*`;
+
+    await socket.sendMessage(targetJid, {
+      image: { url: data.thumbnail },
+      caption
+    });
+
+    await socket.sendMessage(targetJid, {
+      audio: fs.createReadStream(opusPath),
+      mimetype: "audio/ogg; codecs=opus",
+      ptt: true
+    });
+
+    await socket.sendMessage(sender, {
+      text: `✅ *"${data.title}"* ${isBass ? "(Bass Boosted 🔥)" : ""} sent to *${channelname}* 🎶`
+    });
+
+    // Cleanup
+    try {
+      fs.unlinkSync(mp3Path);
+      fs.unlinkSync(opusPath);
+      console.log("Temp files cleaned");
+    } catch (e) {
+      console.error("Cleanup error:", e);
+    }
+
+  } catch (e) {
+    console.error("CSEND FULL ERROR:", e);
+    reply("❌ දෝෂයක් ඇතිවුණා! පසුව නැවත උත්සහ කරන්න.\n\nDeveloper සඳහා:\n" + (e.message || e));
+  }
+  break;
+}
 
 case 'cse': {
   try {
