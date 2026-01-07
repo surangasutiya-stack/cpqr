@@ -25,88 +25,30 @@ const {
   DisconnectReason
 } = require('@fuxxy-star/baileys');
 
-// --------------------------------
-
-const { default: makeWASocket, useMultiFileAuthState } = require('@whiskeysockets/baileys');
-
 // ---------------- CONFIG ----------------
+
 const BOT_NAME_FANCY = '𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃';
 
 const config = {
-    AUTO_VIEW_STATUS: 'true',
-    AUTO_LIKE_STATUS: 'true',
-    AUTO_RECORDING: 'false',
-    AUTO_LIKE_EMOJI: ['☘️','💗','🫂','🙈','🍁','🙃','🧸','😘','🏴‍☠️','👀','❤️‍🔥'],
-    PREFIX: '.',
-    MAX_RETRIES: 3,
-    GROUP_INVITE_LINK: 'https://chat.whatsapp.com/FaU5HDouacpE6TxFviVr5L?mode=hqrc',
-    RCD_IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
-    NEWSLETTER_JID: '120363406815968161@g.us',
-    OTP_EXPIRY: 300000,
-
-    // 🔥 Owner
-    OWNER_NUMBER: '94771657914', // +94 77 165 7914
-    OWNER_NAME: '𝐒𝚄𝚁𝙰𝙽𝙶𝙰 𝐂𝙷𝙰𝙼𝙸𝚃𝙷',
-
-    // 🔥 Auto React Settings
-    OWNER_AUTO_REACT: 'true',
-    OWNER_REACT_EMOJI: ['👑','💜','🔥','🫶','✨'],
-    USER_AUTO_REACT: 'true',
-    USER_REACT_LIST: ['9477XXXXXXX','9471XXXXXXX'], // add other users
-    USER_REACT_EMOJI: ['💜','🔥','🥰','✨','🫶'],
-
-    CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb74RsT0wajtU4dOJD11',
-    BOT_NAME: '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳',
-    BOT_VERSION: '1.0.0V',
-    IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
-    BOT_FOOTER: '> *𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*',
-    BUTTON_IMAGES: { ALIVE: 'https://files.catbox.moe/9osizy.jpg' }
+AUTO_VIEW_STATUS: 'true',
+AUTO_LIKE_STATUS: 'true',
+AUTO_RECORDING: 'false',
+AUTO_LIKE_EMOJI: ['☘️','💗','🫂','🙈','🍁','🙃','🧸','😘','🏴‍☠️','👀','❤️‍🔥'],
+PREFIX: '.',
+MAX_RETRIES: 3,
+GROUP_INVITE_LINK: 'https://chat.whatsapp.com/FaU5HDouacpE6TxFviVr5L?mode=hqrc',
+RCD_IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
+NEWSLETTER_JID: '120363406815968161@g.us',
+OTP_EXPIRY: 300000,
+OWNER_NUMBER: process.env.OWNER_NUMBER || '94760264995',
+CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb74RsT0wajtU4dOJD11',
+BOT_NAME: '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳',
+BOT_VERSION: '1.0.0V',
+OWNER_NAME: '𝐒𝚄𝚁𝙰𝙽𝙶𝙰 𝐂𝙷𝙰𝙼𝙸𝚃𝙷',
+IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
+BOT_FOOTER: '> 𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃',
+BUTTON_IMAGES: { ALIVE: 'https://files.catbox.moe/9osizy.jpg' }
 };
-
-// ================= BOT START =================
-async function startBot() {
-    const { state, saveCreds } = await useMultiFileAuthState('./session');
-
-    const sock = makeWASocket({
-        auth: state,
-        printQRInTerminal: true
-    });
-
-    sock.ev.on('creds.update', saveCreds);
-
-    // 🔥 AUTO REACT
-    sock.ev.on('messages.upsert', async ({ messages }) => {
-        try {
-            const msg = messages[0];
-            if (!msg.message || msg.key.fromMe) return;
-
-            const senderNum = msg.key.remoteJid.split('@')[0];
-
-            // Owner auto-react
-            if (config.OWNER_AUTO_REACT === 'true' && senderNum === config.OWNER_NUMBER) {
-                const emoji = config.OWNER_REACT_EMOJI[Math.floor(Math.random() * config.OWNER_REACT_EMOJI.length)];
-                await sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } });
-                return;
-            }
-
-            // Selected users auto-react
-            if (config.USER_AUTO_REACT === 'true' && config.USER_REACT_LIST.includes(senderNum)) {
-                const emoji = config.USER_REACT_EMOJI[Math.floor(Math.random() * config.USER_REACT_EMOJI.length)];
-                await sock.sendMessage(msg.key.remoteJid, { react: { text: emoji, key: msg.key } });
-            }
-
-        } catch (err) {
-            console.log('Auto react error:', err);
-        }
-    });
-
-    // ================= COMMAND HANDLER PLACEHOLDER =================
-    // Add your command logic here (e.g., .ping, .menu)
-
-    console.log(`${BOT_NAME_FANCY} started successfully!`);
-}
-
-startBot();
 // ---------------- MONGO SETUP ----------------
 
 const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://zantahihi:suranga2005962@cluster0.pafldvl.mongodb.net/?retryWrites=true&w=majority';
