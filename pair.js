@@ -27,6 +27,8 @@ const {
 
 // ---------------- CONFIG ----------------
 
+// ---------------- CONFIG ----------------
+
 const BOT_NAME_FANCY = '𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃';
 
 const config = {
@@ -40,15 +42,27 @@ const config = {
   RCD_IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
   NEWSLETTER_JID: '120363406815968161@g.us',
   OTP_EXPIRY: 300000,
-  OWNER_NUMBER: process.env.OWNER_NUMBER || '94760264995',
+
+  // 🔥 OWNER
+  OWNER_NUMBER: process.env.OWNER_NUMBER || '94771657914',
+  OWNER_NAME: '𝐒𝚄𝚁𝙰𝙽𝙶𝙰 𝐂𝙷𝙰𝙼𝙸𝚃𝙷',
+
+  // 🔥 AUTO REACT SETTINGS
+  OWNER_AUTO_REACT: 'true',
+  OWNER_REACT_EMOJI: ['👑','💜','🔥','🫶','✨'], // Owner reacts randomly
+  USER_AUTO_REACT: 'true',
+  USER_REACT_LIST: ['9477XXXXXXX','9471XXXXXXX'], // add other users
+  USER_REACT_EMOJI: ['💜','🔥','🥰','✨','🫶'],
+
   CHANNEL_LINK: 'https://whatsapp.com/channel/0029Vb74RsT0wajtU4dOJD11',
   BOT_NAME: '© 𝐙𝙰𝙽𝚃𝙰 ✘ 𝐌𝙳',
   BOT_VERSION: '1.0.0V',
-  OWNER_NAME: '𝐒𝚄𝚁𝙰𝙽𝙶𝙰 𝐂𝙷𝙰𝙼𝙸𝚃𝙷',
   IMAGE_PATH: 'https://files.catbox.moe/9osizy.jpg',
   BOT_FOOTER: '> *𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*',
   BUTTON_IMAGES: { ALIVE: 'https://files.catbox.moe/9osizy.jpg' }
 };
+
+module.exports = config;
 
 // ---------------- MONGO SETUP ----------------
 
