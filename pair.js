@@ -3005,6 +3005,178 @@ END:VCARD`
     }
     break;
 }
+case 'link': {
+  try {
+    const sender = msg.key.remoteJid.includes('@g.us') ? msg.key.participant : msg.key.remoteJid;
+    const userNumber = sender.replace(/[^0-9]/g, ''); // Clean number for DB key
+
+    // Load user profile from MongoDB
+    let userProfile = await loadUserProfileFromMongo(userNumber) || {
+      name: 'Unknown',
+      from: 'Unknown',
+      age: '?',
+      gender: 'Unknown' // 'Male' or 'Female'
+    };
+
+    // Auto-fetch pushname if name is default/unknown
+    if (userProfile.name === 'Unknown' && msg.pushName) {
+      userProfile.name = msg.pushName;
+    }
+
+    // Generate the formatted status view text
+    const linkText = `
+*Ｆᴏʀ ＳᴛΔᵀᴜs  Ｖɪᴠᴇ*
+
+~https://wa.me/?text=*|𝗥𝗶_⃟𝗧↯⃝🪀🌝_හායි🙈කොහොමද_ඉතිම්🌍💔ස්ටේටස්🪄බලන්න_කන්ටැක්🥰සේව්_දාගන්න_පොඩි🍃🤍ආවෙ🪄❢❢*👀~
+
+*🐼⃪⃮⃖☘️`⃪⃮⃖`[*`༒<${userProfile.name}>꧂༒ `🤍🍓⃪⃮⃖`]*
+
+*`🐼⃪⃮⃖☘️⃪⃮⃖ගම ⛥<${userProfile.from}>  🤍⃪⃮⃖🍓⃪⃮⃖`*
+
+*`🐼⃪⃮⃖☘️⃪⃮⃖වයස ᥫ᭡ <${userProfile.age}> ✗? 🤍⃪⃮⃖🍓`⃪⃮⃖*
+
+*`🐼⃪⃮⃖☘️⃮අහිම්සක ᥫ᭡ <${userProfile.gender === 'Male' ? 'මේල්' : userProfile.gender === 'Female' ? 'ෆිමේල්' : 'Unknown'}> `🤍⃪⃮⃖🍓⃪⃮⃖*
+
+*`🐼̶̅͟🤍🍓❁ *`හැමෝම ｓｖකරගෙන ｍｓｇ එකක් දාන්න`☘️
+
+~*
+ 
+✦▬▬▬▬▬▬▬▬▬▬▬▬▬▬▬✦   *❤️‍🩹
+       ⣀⣴⣶⠾⠿⠿⣶⣦⣄   
+   ⢠⣾⠟⠉             ⠈⠻⣷⡄ 
+⢠⣿⠃     ⣴⣶              ⠈⢿⡆
+⣼⡇     ⣿⣿⠁                 ⢸⣿
+⢻⡇     ⠈⢻⣦⣀⢀⣤⣄      ⢸⣿
+⠘⣿⡄       ⠈⠻⠿⣿⠿    ⢀⣾⠇
+ ⣿⠃⣀⡀                ⢀⣴⡿⠃ 
+⣸⠿⠟⠛⠻⠿⣶⣶⣶⠿⠟⠋
+
+┈┈┈┈┈╭━╱▔▔▔▔╲━╮┈┈┈┈┈        
+┈┈┈┈┈╰╱╭▅╮╭▅╮╲╯┈┈┈┈┈
+╳┈┈┈┈┈▏╰┈▅▅┈╯▕┈┈┈┈┈┈
+┈┈┈┈┈┈╲┈╰━━╯┈╱┈┈╳┈┈┈
+┈┈┈┈┈┈╱╱▔╲╱▔╲╲┈┈┈┈┈┈
+┈┈┈┈╭━╮▔▏┊┊▕▔╭━╮┈┈┈┈
+┈┈┈┈┃┊┣▔╲┊┊╱▔┫┊┃┈┈┈┈
+┈┈┈┈╰━━━━╲╱━━━━╯┈┈┈┈
+
+♡ ㅤ      ❍ㅤ        ⎙ㅤ     ⌲ 
+ˡᶦᵏᵉ     ᶜᵒᵐᵐᵉⁿᵗ     ˢᵃᵛᵉ     ˢʰᵃʳᵉ
+🐼●━━━━━━━━━●━━━━━●🐼
+ ⇆   ◁ㅤㅤ❚❚ㅤㅤ▷      ↻
+    `.trim();
+
+    // React to message
+    await socket.sendMessage(sender, { react: { text: '🔗', key: msg.key } });
+
+    // Send the formatted text with EDIT button
+    await socket.sendMessage(sender, {
+      text: linkText,
+      footer: `© ${botName} • Your Status View Link`,
+      buttons: [
+        {
+          buttonId: `${config.PREFIX}editprofile`,
+          buttonText: { displayText: '✏️ EDIT' },
+          type: 1
+        }
+      ],
+      headerType: 1
+    });
+
+  } catch (err) {
+    console.error("Error in .link command:", err);
+    await socket.sendMessage(sender, { text: '*❌ Error loading link. Try again later.*' });
+  }
+  break;
+}
+
+// New command for editing profile
+case 'editprofile': {
+  try {
+    const sender = msg.key.remoteJid.includes('@g.us') ? msg.key.participant : msg.key.remoteJid;
+
+    await socket.sendMessage(sender, { react: { text: '✏️', key: msg.key } });
+
+    const editText = `
+*✏️ Edit Your Profile*
+
+Current Profile:
+• Name: ${ (await loadUserProfileFromMongo(sender.replace(/[^0-9]/g, '')) || {}).name || msg.pushName || 'Unknown' }
+• From (ගම): ${ (await loadUserProfileFromMongo(sender.replace(/[^0-9]/g, '')) || {}).from || 'Unknown' }
+• Age (වයස): ${ (await loadUserProfileFromMongo(sender.replace(/[^0-9]/g, '')) || {}).age || '?' }
+• Gender: ${ (await loadUserProfileFromMongo(sender.replace(/[^0-9]/g, '')) || {}).gender || 'Unknown' }
+
+Reply to this message with:
+1. Your Name
+2. Your From (ගම/place)
+3. Your Age
+4. Your Gender (Male / Female)
+
+*Example reply:*
+Asiri
+Colombo
+20
+Male
+
+After replying, use *${config.PREFIX}setlink* to save & update your link!
+    `.trim();
+
+    // You can quote the message or just send
+    await socket.sendMessage(sender, { text: editText });
+
+    // Optionally, store temporary state if needed (e.g., awaiting profile edit)
+    // For simplicity, we'll handle in next message or separate logic
+
+  } catch (err) {
+    console.error("Error in editprofile:", err);
+  }
+  break;
+}
+
+// Handle .setlink - assumes previous reply has the details
+case 'setlink': {
+  try {
+    const sender = msg.key.remoteJid.includes('@g.us') ? msg.key.participant : msg.key.remoteJid;
+    const userNumber = sender.replace(/[^0-9]/g, '');
+
+    const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').trim();
+
+    if (!text || !text.includes('\n')) {
+      await socket.sendMessage(sender, { text: '*❌ Invalid format. Reply to edit message with details as shown.*' });
+      return;
+    }
+
+    const lines = text.split('\n').map(l => l.trim()).filter(l => l);
+    if (lines.length < 4) {
+      await socket.sendMessage(sender, { text: '*❌ Please provide all 4 details (Name, From, Age, Gender).*' });
+      return;
+    }
+
+    const [name, from, age, gender] = lines;
+
+    const profile = {
+      name: name || msg.pushName || 'Unknown',
+      from: from || 'Unknown',
+      age: age || '?',
+      gender: gender.toLowerCase() === 'male' ? 'Male' : gender.toLowerCase() === 'female' ? 'Female' : 'Unknown'
+    };
+
+    // Save to MongoDB
+    await saveUserProfileToMongo(userNumber, profile);
+
+    await socket.sendMessage(sender, { react: { text: '✅', key: msg.key } });
+
+    await socket.sendMessage(sender, {
+      text: `*✅ Profile Updated Successfully!*\n\nNow use *${config.PREFIX}link* to view your updated status view link.`,
+      footer: `© ${botName}`
+    });
+
+  } catch (err) {
+    console.error("Error in .setlink:", err);
+    await socket.sendMessage(sender, { text: '*❌ Error saving profile.*' });
+  }
+  break;
+}
 case 'xv':
 case 'xvsearch':
 case 'xvdl': {
