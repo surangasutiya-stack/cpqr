@@ -3610,39 +3610,27 @@ case 'vv':
 case 'retrive':
 case 'viewonce': {
     try {
-        if (!m.quoted) return reply("Please reply to a ViewOnce message.");
+        if (!m.quoted) return reply("Reply to a ViewOnce message.");
 
-        const mime = m.quoted.type;
-        let ext, mediaType;
+        const type = m.quoted.type;
+        let mediaKey;
 
-        if (mime === "imageMessage") {
-            ext = "jpg";
-            mediaType = "image";
-        } else if (mime === "videoMessage") {
-            ext = "mp4";
-            mediaType = "video";
-        } else if (mime === "audioMessage") {
-            ext = "mp3";
-            mediaType = "audio";
-        } else {
-            return reply("Unsupported media type. Reply to ViewOnce image / video / audio only.");
-        }
+        if (type === 'imageMessage') mediaKey = 'image';
+        else if (type === 'videoMessage') mediaKey = 'video';
+        else if (type === 'audioMessage') mediaKey = 'audio';
+        else return reply("Unsupported ViewOnce type.");
 
         const buffer = await m.quoted.download();
-        const filePath = `${Date.now()}.${ext}`;
 
-        require('fs').writeFileSync(filePath, buffer);
+        if (!conn?.user) return reply("❌ Connection lost.");
 
-        let sendObj = {};
-        sendObj[mediaType] = require('fs').readFileSync(filePath);
+        await conn.sendMessage(from, {
+            [mediaKey]: buffer
+        }, { quoted: mek });
 
-        await conn.sendMessage(from, sendObj, { quoted: mek });
-
-        require('fs').unlinkSync(filePath);
-
-    } catch (err) {
-        console.log(err);
-        reply("❌ Error while retrieving ViewOnce media.");
+    } catch (e) {
+        console.log(e);
+        reply("❌ Failed to retrieve ViewOnce media.");
     }
 }
 break;
