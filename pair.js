@@ -1228,89 +1228,6 @@ case 'settg': {
   break;
 }
 
-case 'tourl': {
-  try {
-    const quoted = msg.quoted ? msg.quoted : msg;
-    const mime = (quoted?.msg || quoted)?.mimetype || '';
-
-    if (!quoted || !mime || mime.includes('text/plain') || typeof quoted.download !== 'function') {
-      await socket.sendMessage(sender, {
-        text: `❌ Reply to an image / video / audio / document\n\nExample:\n${config.PREFIX}tourl`
-      }, { quoted: msg });
-      break;
-    }
-
-    await socket.sendMessage(sender, { react: { text: '⏳', key: msg.key } });
-
-    const media = await quoted.download();
-    if (!media) throw new Error('Download failed');
-
-    if (media.length > 30 * 1024 * 1024)
-      throw new Error('File too large');
-
-    const ext = mime.split('/')[1] || 'bin';
-    const fileName = `file_${Date.now()}.${ext}`;
-
-    const axios = require('axios');
-
-    // 🔥 upload to transfer.sh (NO form-data needed)
-    const res = await axios.put(
-      `https://transfer.sh/${fileName}`,
-      media,
-      {
-        headers: {
-          'Content-Type': mime,
-          'Content-Length': media.length
-        },
-        timeout: 120000
-      }
-    );
-
-    const fileUrl = res.data.trim();
-
-    // Try copy button (new WhatsApp)
-    try {
-      const { generateWAMessageFromContent, proto } = require('@fuxxy-star/baileys');
-
-      const btnMsg = generateWAMessageFromContent(sender, {
-        viewOnceMessage: {
-          message: {
-            interactiveMessage: proto.Message.InteractiveMessage.create({
-              body: { text: '✅ Upload Success!\n\n🔗 Click copy below' },
-              footer: { text: 'CHAMA MD MINI BOT' },
-              nativeFlowMessage: {
-                buttons: [{
-                  name: 'cta_copy',
-                  buttonParamsJson: JSON.stringify({
-                    display_text: '📋 Copy URL',
-                    copy_code: fileUrl
-                  })
-                }]
-              }
-            })
-          }
-        }
-      }, {});
-
-      await socket.relayMessage(sender, btnMsg.message, {
-        messageId: btnMsg.key.id
-      });
-    } catch {
-      // fallback
-      await socket.sendMessage(sender, {
-        text: `✅ Upload Success!\n\n🔗 ${fileUrl}`
-      }, { quoted: msg });
-    }
-
-  } catch (err) {
-    console.error(err);
-    await socket.sendMessage(sender, { react: { text: '❌', key: msg.key } });
-    await socket.sendMessage(sender, {
-      text: '❌ Upload failed or file too large'
-    }, { quoted: msg });
-  }
-  break;
-}
 case 'setting0': {
     await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
     try {
@@ -3687,35 +3604,6 @@ Reply (quote this):
 
     break;
 }
-
-case 'vv':
-case 'retrive':
-case 'viewonce': {
-    try {
-        if (!m.quoted) return reply("Reply to a ViewOnce message.");
-
-        const type = m.quoted.type;
-        let mediaKey;
-
-        if (type === 'imageMessage') mediaKey = 'image';
-        else if (type === 'videoMessage') mediaKey = 'video';
-        else if (type === 'audioMessage') mediaKey = 'audio';
-        else return reply("Unsupported ViewOnce type.");
-
-        const buffer = await m.quoted.download();
-
-        if (!conn?.user) return reply("❌ Connection lost.");
-
-        await conn.sendMessage(from, {
-            [mediaKey]: buffer
-        }, { quoted: mek });
-
-    } catch (e) {
-        console.log(e);
-        reply("❌ Failed to retrieve ViewOnce media.");
-    }
-}
-break;
 
 case 'cs': {
   try {
