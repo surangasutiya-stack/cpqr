@@ -2164,6 +2164,94 @@ case 'gpt': {
       return;
     }
 
+    // Session number (user-specific chatid to maintain conversation)
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    const chatid = sanitized || 'default'; // fallback if no number
+
+    // Load bot name from DB or default
+    let cfg = await loadUserConfigFromMongo(sanitized) || {};
+    let botName = cfg.botName || '© 𝐇ɪʀᴜ ✘ 𝐌ᴅ';
+
+    // Meta AI mention for quote
+    const metaQuote = {
+      key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: `META_AI_${Date.now()}` },
+      message: { 
+        contactMessage: { 
+          displayName: botName, 
+          vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName};;;;\nFN:${botName}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` 
+        } 
+      }
+    };
+
+    await socket.sendMessage(sender, { react: { text: '🤖', key: msg.key } });
+    await socket.sendMessage(sender, { text: '*⏳ AI thinking...*', quoted: metaQuote });
+
+    // New prompt (ඔයාගේ original prompt එකම තියෙනවා, BatGPT එකේ direct message යවන නිසා system prompt එක separate යවන්න බෑ)
+    const userMessage = `
+*ඔබ සැබෑ ගැහැනු ලමයෙකු මෙන් හැසිරිය යුතුය. ඉමෝජි පමනක් තිබේනම් ඔබද ඉමෝජි පමනක් යවන්න... 
+ඔයාගේ නම ${botName} , ඔයාගෙන් කවුරුහරි "ඔයාව හැදුවේ කවුද?" කියලා ඇහුවොත් විතරක් ඔයා කියන්නේ "මාව හැදුවේ හිරුන් විකසිත" කියලා.* 
+
+User: ${q}
+    `.trim();
+
+    // BatGPT API call
+    const apiUrl = `https://batgpt.vercel.app/api/gpt?chatid=${chatid}&message=${encodeURIComponent(userMessage)}`;
+
+    const res = await fetch(apiUrl);
+
+    if (!res.ok) {
+      throw new Error(`API Error: ${res.status} ${res.statusText}`);
+    }
+
+    const result = await res.json();
+
+    // BatGPT response structure (common: { response: "..." } or { text: "..." } – adjust if needed)
+    let aiReply = result.response || result.text || result.message || JSON.stringify(result);
+
+    if (!aiReply || aiReply.trim() === '') {
+      aiReply = '*🚩 AI reply not found or empty.*';
+    }
+
+    await socket.sendMessage(sender, {
+      text: aiReply.trim(),
+      footer: `🤖 ${botName}`,
+      buttons: [
+        { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📄 𝐌𝙰𝙄𝙽 𝐌𝙴𝙽𝚄' }, type: 1 },
+        { buttonId: `${config.PREFIX}alive`, buttonText: { displayText: '📡 𝐁𝙾𝚃 𝐈𝙽𝙵𝙾' }, type: 1 }
+      ],
+      headerType: 1,
+      quoted: metaQuote
+    });
+
+  } catch (err) {
+    console.error("Error in AI chat:", err);
+    await socket.sendMessage(sender, { 
+      text: '*❌ Internal AI Error. Please try again later.*\nReason: ' + (err.message || 'Unknown'),
+      buttons: [
+        { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📄 𝘔𝘦𝘯𝘶' }, type: 1 }
+      ]
+    });
+  }
+  break;
+}
+
+case 'i':
+case 'cat':
+case 'gt': {
+  try {
+    const text = (msg.message.conversation || msg.message.extendedTextMessage?.text || '').trim();
+    const q = text.split(" ").slice(1).join(" ").trim();
+
+    if (!q) {
+      await socket.sendMessage(sender, { 
+        text: '*🚫 Please provide a message for AI.*',
+        buttons: [
+          { buttonId: `${config.PREFIX}menu`, buttonText: { displayText: '📄 𝘔𝘦𝘯𝘶' }, type: 1 }
+        ]
+      });
+      return;
+    }
+
     // Session number
     const sanitized = (number || '').replace(/[^0-9]/g, '');
     // Load bot name from DB or default
