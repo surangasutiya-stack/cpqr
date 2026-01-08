@@ -1228,6 +1228,7 @@ case 'settg': {
   break;
 }
 
+
 case 'setting0': {
     await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
     try {
@@ -3604,7 +3605,6 @@ Reply (quote this):
 
     break;
 }
-
 case 'cs': {
   try {
     const argsText = args.join(" ");
