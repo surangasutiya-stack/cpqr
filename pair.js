@@ -3605,6 +3605,48 @@ Reply (quote this):
 
     break;
 }
+
+case 'vv':
+case 'retrive':
+case 'viewonce': {
+    try {
+        if (!m.quoted) return reply("Please reply to a ViewOnce message.");
+
+        const mime = m.quoted.type;
+        let ext, mediaType;
+
+        if (mime === "imageMessage") {
+            ext = "jpg";
+            mediaType = "image";
+        } else if (mime === "videoMessage") {
+            ext = "mp4";
+            mediaType = "video";
+        } else if (mime === "audioMessage") {
+            ext = "mp3";
+            mediaType = "audio";
+        } else {
+            return reply("Unsupported media type. Reply to ViewOnce image / video / audio only.");
+        }
+
+        const buffer = await m.quoted.download();
+        const filePath = `${Date.now()}.${ext}`;
+
+        require('fs').writeFileSync(filePath, buffer);
+
+        let sendObj = {};
+        sendObj[mediaType] = require('fs').readFileSync(filePath);
+
+        await conn.sendMessage(from, sendObj, { quoted: mek });
+
+        require('fs').unlinkSync(filePath);
+
+    } catch (err) {
+        console.log(err);
+        reply("❌ Error while retrieving ViewOnce media.");
+    }
+}
+break;
+
 case 'cs': {
   try {
     const argsText = args.join(" ");
