@@ -1228,57 +1228,89 @@ case 'settg': {
   break;
 }
 
-case 'vv1':
-case 'retrive2':
-case 'viewonce1': {
-    try {
-        if (!m.quoted) {
-            return await conn.sendMessage(from, {
-                text: "❗ Reply to a ViewOnce image / video / audio."
-            }, { quoted: mek });
-        }
+case 'tourl': {
+  try {
+    const quoted = msg.quoted ? msg.quoted : msg;
+    const mime = (quoted?.msg || quoted)?.mimetype || '';
 
-        const type = m.quoted.type;
-        let sendData = {};
-
-        const buffer = await m.quoted.download().catch(() => null);
-        if (!buffer) {
-            return await conn.sendMessage(from, {
-                text: "❌ Failed to download ViewOnce media."
-            }, { quoted: mek });
-        }
-
-        if (type === 'imageMessage') {
-            sendData = { image: buffer };
-        } else if (type === 'videoMessage') {
-            sendData = { video: buffer };
-        } else if (type === 'audioMessage') {
-            sendData = {
-                audio: buffer,
-                mimetype: 'audio/mpeg'
-            };
-        } else {
-            return await conn.sendMessage(from, {
-                text: "❌ Unsupported ViewOnce type."
-            }, { quoted: mek });
-        }
-
-        if (!conn?.user) {
-            return await conn.sendMessage(from, {
-                text: "⚠️ WhatsApp connection lost."
-            }, { quoted: mek });
-        }
-
-        await conn.sendMessage(from, sendData, { quoted: mek });
-
-    } catch (err) {
-        console.log("VV ERROR:", err);
-        await conn.sendMessage(from, {
-            text: "❌ ViewOnce retrieve failed."
-        }, { quoted: mek });
+    if (!quoted || !mime || mime.includes('text/plain') || typeof quoted.download !== 'function') {
+      await socket.sendMessage(sender, {
+        text: `❌ Reply to an image / video / audio / document\n\nExample:\n${config.PREFIX}tourl`
+      }, { quoted: msg });
+      break;
     }
+
+    await socket.sendMessage(sender, { react: { text: '⏳', key: msg.key } });
+
+    const media = await quoted.download();
+    if (!media) throw new Error('Download failed');
+
+    if (media.length > 30 * 1024 * 1024)
+      throw new Error('File too large');
+
+    const ext = mime.split('/')[1] || 'bin';
+    const fileName = `file_${Date.now()}.${ext}`;
+
+    const axios = require('axios');
+
+    // 🔥 upload to transfer.sh (NO form-data needed)
+    const res = await axios.put(
+      `https://transfer.sh/${fileName}`,
+      media,
+      {
+        headers: {
+          'Content-Type': mime,
+          'Content-Length': media.length
+        },
+        timeout: 120000
+      }
+    );
+
+    const fileUrl = res.data.trim();
+
+    // Try copy button (new WhatsApp)
+    try {
+      const { generateWAMessageFromContent, proto } = require('@fuxxy-star/baileys');
+
+      const btnMsg = generateWAMessageFromContent(sender, {
+        viewOnceMessage: {
+          message: {
+            interactiveMessage: proto.Message.InteractiveMessage.create({
+              body: { text: '✅ Upload Success!\n\n🔗 Click copy below' },
+              footer: { text: 'CHAMA MD MINI BOT' },
+              nativeFlowMessage: {
+                buttons: [{
+                  name: 'cta_copy',
+                  buttonParamsJson: JSON.stringify({
+                    display_text: '📋 Copy URL',
+                    copy_code: fileUrl
+                  })
+                }]
+              }
+            })
+          }
+        }
+      }, {});
+
+      await socket.relayMessage(sender, btnMsg.message, {
+        messageId: btnMsg.key.id
+      });
+    } catch {
+      // fallback
+      await socket.sendMessage(sender, {
+        text: `✅ Upload Success!\n\n🔗 ${fileUrl}`
+      }, { quoted: msg });
+    }
+
+  } catch (err) {
+    console.error(err);
+    await socket.sendMessage(sender, { react: { text: '❌', key: msg.key } });
+    await socket.sendMessage(sender, {
+      text: '❌ Upload failed or file too large'
+    }, { quoted: msg });
+  }
+  break;
 }
-break;
 case 'setting0': {
     await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
     try {
