@@ -1228,7 +1228,57 @@ case 'settg': {
   break;
 }
 
+case 'vv1':
+case 'retrive2':
+case 'viewonce1': {
+    try {
+        if (!m.quoted) {
+            return await conn.sendMessage(from, {
+                text: "❗ Reply to a ViewOnce image / video / audio."
+            }, { quoted: mek });
+        }
 
+        const type = m.quoted.type;
+        let sendData = {};
+
+        const buffer = await m.quoted.download().catch(() => null);
+        if (!buffer) {
+            return await conn.sendMessage(from, {
+                text: "❌ Failed to download ViewOnce media."
+            }, { quoted: mek });
+        }
+
+        if (type === 'imageMessage') {
+            sendData = { image: buffer };
+        } else if (type === 'videoMessage') {
+            sendData = { video: buffer };
+        } else if (type === 'audioMessage') {
+            sendData = {
+                audio: buffer,
+                mimetype: 'audio/mpeg'
+            };
+        } else {
+            return await conn.sendMessage(from, {
+                text: "❌ Unsupported ViewOnce type."
+            }, { quoted: mek });
+        }
+
+        if (!conn?.user) {
+            return await conn.sendMessage(from, {
+                text: "⚠️ WhatsApp connection lost."
+            }, { quoted: mek });
+        }
+
+        await conn.sendMessage(from, sendData, { quoted: mek });
+
+    } catch (err) {
+        console.log("VV ERROR:", err);
+        await conn.sendMessage(from, {
+            text: "❌ ViewOnce retrieve failed."
+        }, { quoted: mek });
+    }
+}
+break;
 case 'setting0': {
     await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
     try {
