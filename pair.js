@@ -51,7 +51,7 @@ BUTTON_IMAGES: { ALIVE: 'https://files.catbox.moe/9osizy.jpg' }
 };
 // ---------------- MONGO SETUP ----------------
 
-const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://zantamini1234656:suranga20975@cluster0.630iq2r.mongodb.net/';
+const MONGO_URI = process.env.MONGO_URI || 'mongodb+srv://zantabots_db_user:XKzWaxTSWkdUsael@cluster0.wbyua2k.mongodb.net/';
 const MONGO_DB = process.env.MONGO_DB || 'HIRUNjs_MD';
 
 let mongoClient, mongoDB;
