@@ -23,7 +23,7 @@ const {
   jidNormalizedUser,
   downloadContentFromMessage,
   DisconnectReason
-} = require('@fuxxy-star/baileys');
+} = require('baileys');
 
 // ---------------- CONFIG ----------------
 
@@ -7431,11 +7431,10 @@ async function EmpirePair(number, res) {
 
   try {
     const socket = makeWASocket({
-      auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, logger) },
+      version: [2,3000,1033105955],
+      auth: state,
+      logger: pino({ level: "silent" }),
       printQRInTerminal: false,
-      logger,
-      // 🛠️ FIX: Browsers.macOS fixed for Linux/Render
-      browser: ["Ubuntu", "Chrome", "20.0.04"] 
     });
 
     socketCreationTime.set(sanitizedNumber, Date.now());
