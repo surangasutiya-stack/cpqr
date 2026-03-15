@@ -8,14 +8,14 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "baileys": "npm:supunmd-bail@latest",
+    "baileys": "npm:baileyz@^1.0.9",
     "express": "^4.18.2",
     "@octokit/rest": "^21.0.0",
     "fs-extra": "^11.2.0",
     "node-fetch": "3.3.2",
     "pino": "^8.17.0",
     "jimp": "^0.16.1",
-    "sharp": "^0.32.2",
+    "sharp": "^0.34.5",
     "figlet": "^1.7.0",
     "child_process": "^1.0.2",
     "wa-sticker-formatter": "^4.4.4",
