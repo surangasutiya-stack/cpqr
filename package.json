@@ -15,7 +15,7 @@
     "node-fetch": "3.3.2",
     "pino": "^8.17.0",
     "jimp": "^0.16.1",
-    "sharp": "^0.32.2",
+    "sharp": "^0.34.5",
     "figlet": "^1.7.0",
     "child_process": "^1.0.2",
     "wa-sticker-formatter": "^4.4.4",
