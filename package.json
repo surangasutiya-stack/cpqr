@@ -1,7 +1,7 @@
 {
-  "name": "chama-md-mini-bot",
+  "name": "zanta-xmd-mini-bot",
   "version": "1.0.0",
-  "description": "CHAMA MD MINI BOT WhatsApp Bot with Multi-Number Support",
+  "description": "ZANTA XMD MINI BOT WhatsApp Bot",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
@@ -10,7 +10,7 @@
     "node": "24.x"
   },
   "dependencies": {
-    "@fuxxy-star/baileys": "latest",
+    "@supunmd-bail": "latest",
     "express": "^4.18.2",
     "fs-extra": "^11.2.0",
     "pino": "^8.17.0",
@@ -37,6 +37,6 @@
     "multi-device",
     "baileys"
   ],
-  "author": "chama",
+  "author": "SULA-MD",
   "license": "MIT"
 }
