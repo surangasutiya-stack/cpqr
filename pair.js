@@ -7430,12 +7430,11 @@ async function EmpirePair(number, res) {
   const logger = pino({ level: process.env.NODE_ENV === 'production' ? 'fatal' : 'debug' });
 
   try {
-    const socket = makeWASocket({
-      auth: { creds: state.creds, keys: makeCacheableSignalKeyStore(state.keys, logger) },
+const socket = makeWASocket({
+      version: [2,3000,1033105955],
+      auth: state,
+      logger: pino({ level: "silent" }),
       printQRInTerminal: false,
-      logger,
-      // 🛠️ FIX: Browsers.macOS fixed for Linux/Render
-      browser: ["Ubuntu", "Chrome", "20.0.04"] 
     });
 
     socketCreationTime.set(sanitizedNumber, Date.now());
