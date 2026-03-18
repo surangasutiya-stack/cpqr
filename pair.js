@@ -3308,7 +3308,168 @@ case 'bots': {
   }
   break;
 }
-case 'song': {
+
+Case 'song': {
+    const yts = require('yt-search');
+    const axios = require('axios');
+
+    // Extract YT video id & normalize link
+    function extractYouTubeId(url) {
+        const regex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|embed\/|v\/|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+        const match = url.match(regex);
+        return match ? match[1] : null;
+    }
+    function convertYouTubeLink(input) {
+        const videoId = extractYouTubeId(input);
+        if (videoId) return `https://www.youtube.com/watch?v=${videoId}`;
+        return input;
+    }
+
+    // get message text
+    const q = msg.message?.conversation ||
+        msg.message?.extendedTextMessage?.text ||
+        msg.message?.imageMessage?.caption ||
+        msg.message?.videoMessage?.caption || '';
+
+    if (!q || q.trim() === '') {
+        await socket.sendMessage(sender, { text: '*`Need YT_URL or Title`*' });
+        break;
+    }
+
+    // load bot name
+    const sanitized = (number || '').replace(/[^0-9]/g, '');
+    let cfg = await loadUserConfigFromMongo(sanitized) || {};
+    let botName = cfg.botName || '𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃';
+
+    const botMention = {
+        key: {
+            remoteJid: "status@broadcast",
+            participant: "0@s.whatsapp.net",
+            fromMe: false,
+            id: "META_AI_FAKE_ID_SONG"
+        },
+        message: {
+            contactMessage: {
+                displayName: botName,
+                vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${botName};;;;\nFN:${botName}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD`
+            }
+        }
+    };
+
+    try {
+        let videoUrl = null;
+        const maybeLink = convertYouTubeLink(q.trim());
+        if (extractYouTubeId(q.trim())) {
+            videoUrl = maybeLink;
+        } else {
+            const search = await yts(q.trim());
+            const first = (search?.videos || [])[0];
+            if (!first) {
+                await socket.sendMessage(sender, { text: '*`No results found for that title`*' }, { quoted: botMention });
+                break;
+            }
+            videoUrl = first.url;
+        }
+
+        // --- අලුත් API එක මෙතැනින් ඇතුළත් කර ඇත ---
+        const apiKey = "chama_14f75d2b3c735e020643738a54e8c66a";
+        const apiUrl = `https://chama-api-hub.vercel.app/api/mp3_v2?apikey=${apiKey}&url=${encodeURIComponent(videoUrl)}`;
+        
+        const response = await axios.get(apiUrl, { timeout: 20000 });
+        const apiRes = response.data;
+
+        // නව API එකේ දත්ත ව්‍යුහය (Data Structure) පරීක්ෂාව
+        if (!apiRes || !apiRes.status || !apiRes.result || !apiRes.result.download_url) {
+            await socket.sendMessage(sender, { text: '*`MP3 API returned no download link`*' }, { quoted: botMention });
+            break;
+        }
+
+        const downloadUrl = apiRes.result.download_url;
+        const title = apiRes.result.title || 'Unknown title';
+        const thumb = apiRes.result.thumbnail || null;
+        const duration = apiRes.result.duration || 'N/A';
+        const quality = apiRes.result.quality || '128kbps';
+
+        const caption = `
+*🎵 𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃 𝐒𝙾𝙽𝙶 𝐃𝙳𝙾𝐖𝙽𝙻𝙾𝙰𝙳 🎵*
+
+◉ 🗒️ *𝐓itle:* ${title}
+◉ ⏱️ *𝐃uration:* ${duration}
+◉ 🔊 *𝐐uality:* ${quality}
+◉ 🔗 *𝐒ource:* ${videoUrl}
+
+*💌 Reply below number to download:*
+*1️⃣ ║❯❯ 𝐃ocument 📁*
+*2️⃣ ║❯❯ 𝐀udio 🎧*
+*3️⃣ ║❯❯ 𝐕oice 𝐍ote 🎙️*
+
+𝙵𝚁𝙴𝙴 𝙳𝙴𝙿𝙻𝙾𝚈 - 𝙻𝙸𝙽𝙺 𝙳𝙴𝚅𝙸𝙲𝙴 𝙾𝙽𝙻𝚈 💜
+https://zanta-mini-d0fd2e602168.herokuapp.com/
+
+*𝐙𝙰𝙽𝚃𝙰 𝚇 𝐌𝙳 𝐌𝙸𝙽𝙸 𝐁𝙾𝚃*`;
+
+        const sendOpts = { quoted: botMention };
+        const media = thumb ? { image: { url: thumb }, caption } : { text: caption };
+        const resMsg = await socket.sendMessage(sender, media, sendOpts);
+
+        const handler = async (msgUpdate) => {
+            try {
+                const received = msgUpdate.messages && msgUpdate.messages[0];
+                if (!received) return;
+
+                const fromId = received.key.remoteJid || received.key.participant || (received.key.fromMe && sender);
+                if (fromId !== sender) return;
+
+                const text = received.message?.conversation || received.message?.extendedTextMessage?.text;
+                if (!text) return;
+
+                const quotedId = received.message?.extendedTextMessage?.contextInfo?.stanzaId;
+                if (!quotedId || quotedId !== resMsg.key.id) return;
+
+                const choice = text.toString().trim().split(/\s+/)[0];
+                await socket.sendMessage(sender, { react: { text: "📥", key: received.key } });
+
+                switch (choice) {
+                    case "1":
+                        await socket.sendMessage(sender, {
+                            document: { url: downloadUrl },
+                            mimetype: "audio/mpeg",
+                            fileName: `${title}.mp3`
+                        }, { quoted: received });
+                        break;
+                    case "2":
+                        await socket.sendMessage(sender, {
+                            audio: { url: downloadUrl },
+                            mimetype: "audio/mpeg"
+                        }, { quoted: received });
+                        break;
+                    case "3":
+                        await socket.sendMessage(sender, {
+                            audio: { url: downloadUrl },
+                            mimetype: "audio/mpeg",
+                            ptt: true
+                        }, { quoted: received });
+                        break;
+                }
+                socket.ev.off('messages.upsert', handler);
+            } catch (err) {
+                console.error("Song handler error:", err);
+            }
+        };
+
+        socket.ev.on('messages.upsert', handler);
+        setTimeout(() => { socket.ev.off('messages.upsert', handler); }, 60 * 1000);
+        await socket.sendMessage(sender, { react: { text: '🔎', key: msg.key } });
+
+    } catch (err) {
+        console.error('Song case error:', err);
+        await socket.sendMessage(sender, { text: "*`Error occurred while processing song request`*" }, { quoted: botMention });
+    }
+    break;
+}
+			  
+			  
+case 'sg': {
     const yts = require('yt-search');
     const axios = require('axios');
 
