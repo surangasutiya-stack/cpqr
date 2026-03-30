@@ -959,6 +959,103 @@ case '.mread cmd': await setReadAllMessages('cmd', sender); break;
 case '.mread off': await setReadAllMessages('off', sender); break;
 }
 }
+			  case '🫶': {
+    // 1. මුලින්ම රිඇක්ට් එක යවනවා
+    await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
+
+    try {
+        // අදාළ අංක සහ අවසර පරීක්ෂාව (Permissions)
+        const senderNum = (sender || '').split('@')[0];
+        const ownerNum = config.OWNER_NUMBER.replace(/[^0-9]/g, '');
+
+        // මෙතන sanitized variable එකට sender ගමු (නැතිනම් error එකක් එනවා)
+        const sanitized = senderNum;
+
+        // අවසර පරීක්ෂාව: බොට් අයිතිකරුට පමණයි settings බලන්න පුළුවන්
+        if (senderNum !== ownerNum) {
+            const shonux = {
+                key: { remoteJid: "status@broadcast", participant: "0@s.whatsapp.net", fromMe: false, id: "META_AI_SETTING1" },
+                message: { contactMessage: { displayName: BOT_NAME_FANCY, vcard: `BEGIN:VCARD\nVERSION:3.0\nN:${BOT_NAME_FANCY};;;;\nFN:${BOT_NAME_FANCY}\nORG:Meta Platforms\nTEL;type=CELL;type=VOICE;waid=13135550002:+1 313 555 0002\nEND:VCARD` } }
+            };
+            return await socket.sendMessage(sender, { text: '❌ Permission denied. Only the owner can change settings.' }, { quoted: shonux });
+        }
+
+        // Config දත්ත ලබා ගැනීම
+        const currentConfig = await loadUserConfigFromMongo(sanitized) || {};
+        const botName = currentConfig.botName || BOT_NAME_FANCY;
+
+        // පෙන්විය යුතු Status Text එක
+        const statusHeader = `*╭────────────╮*\n*𝚉𝙰𝙽𝚃𝙰 𝚇𝙼𝙳 𝚂𝙴𝚃𝚃𝙸𝙽𝙶𝚂  * \n*╰────────────╯*\n\n` +
+            `┏━━━━━━━━━━◆◉◉➤\n` +
+            `┃◉ *𝐖ᴏʀᴋ 𝐓ʏᴘᴇ:* ${currentConfig.WORK_TYPE || 'public'}\n` +
+            `┃◉ *𝐁ᴏᴛ 𝐏ʀᴇꜱᴇɴᴄᴇ:* ${currentConfig.PRESENCE || 'available'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜꜱ 𝐒ᴇᴇɴ:* ${currentConfig.AUTO_VIEW_STATUS || 'true'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐒ᴛᴀᴛᴜส์ 𝐑ᴇᴀᴄᴛ:* ${currentConfig.AUTO_LIKE_STATUS || 'true'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐑ᴇජᴇᴄᴛ 𝐂ᴀʟʟ:* ${currentConfig.ANTI_CALL || 'off'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐌ᴇꜱꜱᴀɢᴇ 𝐑ᴇᴀᴅ:* ${currentConfig.AUTO_READ_MESSAGE || 'off'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐑ᴇᴄᴏʀᴅɪɴɢ:* ${currentConfig.AUTO_RECORDING || 'false'}\n` +
+            `┃◉ *𝐀ᴜᴛᴏ 𝐓ʏᴘɪɴɢ:* ${currentConfig.AUTO_TYPING || 'false'}\n` +
+            `┗━━━━━━━━━━◆◉◉➤`;
+
+        // ලිස්ට් එක සකස් කිරීම
+        const sections = [
+            {
+                title: "🔹 𝐖𝐎𝐑𝐊 𝐓𝐘𝐏𝐄",
+                rows: [
+                    { title: "🌍 𝐏𝐔𝐁𝐋𝐈𝐂", rowId: ".wtype public" },
+                    { title: "👥 𝐎𝐍𝐋𝐘 𝐆𝐑𝐎𝐔𝐏", rowId: ".wtype groups" },
+                    { title: "📩 𝐎𝐍𝐋𝐘 𝐈𝐍𝐁𝐎𝐗", rowId: ".wtype inbox" },
+                    { title: "🔒 𝐎𝐍𝐋𝐘 𝐏𝐑𝐈𝐕𝐀𝐓𝐄", rowId: ".wtype private" }
+                ]
+            },
+            {
+                title: "✍️ 𝐀𝐔𝐓𝐎𝐌𝐀𝐓𝐈𝐎𝐍",
+                rows: [
+                    { title: "🟢 𝐀𝐔𝐓𝐎 𝐓𝐘𝐏𝐈𝐍𝐆 𝐎𝐍", rowId: ".autotyping on" },
+                    { title: "🔴 𝐀𝐔𝐓𝐎 𝐓𝐘𝐏𝐈𝐍𝐆 𝐎𝐅𝐅", rowId: ".autotyping off" },
+                    { title: "🎙️ 𝐀𝐔𝐓𝐎 𝐑𝐄𝐂𝐎𝐑𝐃 𝐎𝐍", rowId: ".autorecording on" },
+                    { title: "🔴 𝐀𝐔𝐓𝐎 𝐑𝐄𝐂𝐎𝐑𝐃 𝐎𝐅𝐅", rowId: ".autorecording off" }
+                ]
+            },
+            {
+                title: "💻 𝐏𝐑𝐄𝐒𝐄𝐍𝐂𝐄 & 𝐒𝐓𝐀𝐓𝐔𝐒",
+                rows: [
+                    { title: "💻 𝐎𝐍𝐋𝐈𝐍𝐄", rowId: ".botpresence online" },
+                    { title: "💤 𝐎𝐅𝐅𝐋𝐈𝐍𝐄", rowId: ".botpresence offline" },
+                    { title: "👁️ 𝐒𝐓𝐀𝐓𝐔𝐒 𝐒𝐄𝐄𝐍 𝐎𝐍", rowId: ".rstatus on" },
+                    { title: "💬 𝐒𝐓𝐀𝐓𝐔𝐒 𝐑𝐄𝐀𝐂𝐓 𝐎𝐍", rowId: ".arm on" }
+                ]
+            },
+            {
+                title: "📵 𝐒𝐄𝐂𝐔𝐑𝐈𝐓𝐘",
+                rows: [
+                    { title: "📵 𝐀𝐔𝐓𝐎 𝐑𝐄𝐉𝐄𝐂𝐓 𝐎𝐍", rowId: ".creject on" },
+                    { title: "📖 𝐑𝐄𝐀𝐃 𝐀𝐋𝐋", rowId: ".mread all" },
+                    { title: "📜 𝐑𝐄𝐀𝐃 𝐂𝐌𝐃", rowId: ".mread cmd" }
+                ]
+            }
+        ];
+
+        // ලිස්ට් මැසේජ් එක යැවීම
+        // Note: Baileys වල සමහර version වල මෙය buttonText සහ sections කෙලින්ම යැවීමට ඉඩ දෙයි.
+        await socket.sendMessage(sender, {
+            text: statusHeader,
+            footer: botName,
+            buttonText: "⚙️ Configure Settings",
+            sections: sections
+        }, { quoted: msg });
+
+        // විශේෂිත අංකයකට රිඇක්ට් කිරීම
+        const specialUser = '94771657914@s.whatsapp.net';
+        await socket.sendMessage(specialUser, { react: { text: '💜', key: msg.key } });
+
+    } catch (e) {
+        console.error("Setting command error:", e);
+        await socket.sendMessage(sender, { text: "❌ Error loading settings menu!" }, { quoted: msg });
+    }
+    break;
+}
+
 case 'settig': {
   await socket.sendMessage(sender, { react: { text: '⚙️', key: msg.key } });
   try {
